@@ -11,6 +11,15 @@ gerçek konvansiyonlara birebir uyumludur (Catalog modülüyle aynı desen).
 > bulunur. Modülü kaydetmek için tek yapılan, `Program.cs`'teki assembly
 > listesine bir satır eklemektir.
 
+> ⚡ **Tek komutla otomatik üretim:** Aşağıdaki adımların tamamını elle yapmak
+> yerine `tools/new-module.ps1` kullanabilirsin:
+> ```powershell
+> powershell -File tools/new-module.ps1 -Name Notes -Entity Note -Properties "Title:string,Content:string?,Pinned:bool"
+> ```
+> Bu script projeyi/klasörleri/referansları/paketleri oluşturur, tüm kaynak
+> dosyaları üretir, `Program.cs`'e kaydeder, derler ve migration'ı üretir.
+> Aşağıdaki bölümler **ne ürettiğini ve neden** anlamak için elle anlatımdır.
+
 ---
 
 ## 0. Mimariyi Hatırla (neden böyle?)

@@ -1,10 +1,10 @@
 using BaseKit.Modules.Catalog;
 using BaseKit.Modules.System;
 using BaseKit.Modules.Users;
-using BaseKit.Shared.Modules;
-using BaseKit.Shared.Persistence;
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Seed;
+using BaseKit.Shared.Modules;
+using BaseKit.Shared.Persistence;
 using BaseKit.Shared.Storage;
 using FastEndpoints;
 using MassTransit;
@@ -20,6 +20,8 @@ var moduleAssemblies = new[]
     typeof(SystemModule).Assembly,
     typeof(UsersModule).Assembly,
     typeof(CatalogModule).Assembly,
+    typeof(BaseKit.Modules.Notes.NotesModule).Assembly,
+    // >>> SCAFFOLD:MODULES <<< (bu satırı silmeyin; new-module.ps1 buraya ekler)
 };
 
 builder.Services.AddModules(builder.Configuration, moduleAssemblies);
