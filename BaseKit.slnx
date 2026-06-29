@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BaseKit.Api/BaseKit.Api.csproj" />
+    <Project Path="src/BaseKit.Shared/BaseKit.Shared.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/BaseKit.Modules.Catalog/BaseKit.Modules.Catalog.csproj" />
+    <Project Path="src/Modules/BaseKit.Modules.System/BaseKit.Modules.System.csproj" />
+    <Project Path="src/Modules/BaseKit.Modules.Users/BaseKit.Modules.Users.csproj" />
+  </Folder>
+</Solution>

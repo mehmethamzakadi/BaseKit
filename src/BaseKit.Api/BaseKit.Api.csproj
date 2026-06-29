@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\BaseKit.Shared\BaseKit.Shared.csproj" />
+    <ProjectReference Include="..\Modules\BaseKit.Modules.System\BaseKit.Modules.System.csproj" />
+    <ProjectReference Include="..\Modules\BaseKit.Modules.Users\BaseKit.Modules.Users.csproj" />
+    <ProjectReference Include="..\Modules\BaseKit.Modules.Catalog\BaseKit.Modules.Catalog.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageReference Include="FastEndpoints" Version="8.2.0" />
+    <PackageReference Include="MassTransit" Version="8.*" />
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.9" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

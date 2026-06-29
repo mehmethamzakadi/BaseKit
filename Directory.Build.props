@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Tüm projeler için ortak derleme ayarları. Yeni proje/modül eklendiğinde
+       bu ayarlar otomatik uygulanır; tek tek csproj'lara tekrar yazmaya gerek yok. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>
