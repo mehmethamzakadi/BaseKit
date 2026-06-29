@@ -3,10 +3,11 @@ import { env } from '@/config/env'
 import { tokenStorage } from '@/features/auth/tokenStorage'
 import type { TokenResponse } from '@/types/auth'
 
-/** Tüm API çağrıları için ortak axios örneği. */
+/** Tüm API çağrıları için ortak axios örneği.
+ * Content-Type'ı sabitlemiyoruz: axios JSON gövdeler için application/json,
+ * FormData (dosya yükleme) için multipart/form-data + boundary'i otomatik ayarlar. */
 export const apiClient = axios.create({
   baseURL: env.apiUrl,
-  headers: { 'Content-Type': 'application/json' },
 })
 
 // --- İstek interceptor'ı: access token'ı ekle ---
