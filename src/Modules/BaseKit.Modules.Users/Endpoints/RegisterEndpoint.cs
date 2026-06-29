@@ -1,4 +1,5 @@
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Modules.Users.Seed;
 using BaseKit.Shared.Messaging;
 using FastEndpoints;
 using MassTransit;
@@ -34,6 +35,10 @@ public sealed class RegisterEndpoint(UserManager<AppUser> userManager, IPublishE
             await Send.ErrorsAsync(400, ct);
             return;
         }
+
+        // Yeni kullanıcı varsayılan olarak "Standart Kullanıcı" rolünü alır
+        // (temel .view yetkileri). Rol açılışta seed edilir; her zaman vardır.
+        await userManager.AddToRoleAsync(user, DefaultRoles.StandardUser);
 
         await publishEndpoint.Publish(
             new UserRegistered(user.Id, user.Email!, DateTimeOffset.UtcNow), ct);

@@ -55,11 +55,25 @@ builder.Services
     .AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("Postgres")!, name: "postgres");
 
+// CORS: React SPA client'ı farklı origin'den (ör. Vite :5173) API'yi çağırabilsin.
+// İzinli origin'ler appsettings "Cors:AllowedOrigins" üzerinden yönetilir.
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                  ?? ["http://localhost:5173"];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("spa", policy =>
+        policy.WithOrigins(corsOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Tüm modül DbContext'lerinin bekleyen migration'larını uygula, sonra seed et.
 await app.Services.MigrateModulesAsync();
 await UsersSeeder.SeedAsync(app.Services);
+
+app.UseCors("spa");
 
 app.UseAuthentication();
 app.UseAuthorization();

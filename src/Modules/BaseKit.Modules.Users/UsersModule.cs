@@ -37,7 +37,8 @@ public sealed class UsersModule : IModule
                 options.User.RequireUniqueEmail = true;
             })
             .AddRoles<AppRole>()
-            .AddEntityFrameworkStores<UsersDbContext>();
+            .AddEntityFrameworkStores<UsersDbContext>()
+            .AddDefaultTokenProviders(); // şifre sıfırlama / e-posta onay token'ları için
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
