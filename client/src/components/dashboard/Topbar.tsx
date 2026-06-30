@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { LogOut, Menu, UserCog } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import NotificationBell from '@/components/dashboard/NotificationBell'
 import { useAuth } from '@/features/auth/useAuth'
 
 interface TopbarProps {
@@ -27,6 +28,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       </button>
 
       <div className="ml-auto flex items-center gap-1">
+        <NotificationBell />
         <ThemeToggle />
 
         <div className="relative">

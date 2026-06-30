@@ -8,12 +8,14 @@ import Button from '@/components/ui/Button'
 import FormError from '@/components/ui/FormError'
 import { loginSchema } from '@/features/auth/validation'
 import { useAuth } from '@/features/auth/useAuth'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 import { getApiErrorMessage } from '@/types/api'
 
 export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { registrationEnabled } = usePublicSettings()
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -22,12 +24,14 @@ export default function LoginPage() {
       title="Giriş Yap"
       subtitle="Hesabınıza erişin"
       footer={
-        <>
-          Hesabınız yok mu?{' '}
-          <Link to="/register" className="font-medium text-brand-600 hover:underline">
-            Kayıt olun
-          </Link>
-        </>
+        registrationEnabled ? (
+          <>
+            Hesabınız yok mu?{' '}
+            <Link to="/register" className="font-medium text-brand-600 hover:underline">
+              Kayıt olun
+            </Link>
+          </>
+        ) : undefined
       }
     >
       <Formik

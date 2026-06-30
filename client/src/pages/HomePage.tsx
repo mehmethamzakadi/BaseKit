@@ -1,16 +1,18 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/useAuth'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 
 export default function HomePage() {
   const { status, user } = useAuth()
+  const { siteName } = usePublicSettings()
   const isAuthed = status === 'authenticated'
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-slate-50">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-slate-50 dark:from-slate-950 dark:to-slate-900">
       {/* Navbar */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-        <Link to="/" className="text-xl font-bold text-brand-700">
-          BaseKit
+        <Link to="/" className="text-xl font-bold text-brand-700 dark:text-brand-400">
+          {siteName}
         </Link>
         <nav className="flex items-center gap-3">
           {isAuthed ? (
@@ -24,7 +26,7 @@ export default function HomePage() {
             <>
               <Link
                 to="/login"
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Giriş
               </Link>
@@ -45,7 +47,7 @@ export default function HomePage() {
           Modüler Yönetim Platformu
         </span>
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-5xl">
-          BaseKit'e hoş geldiniz
+          {siteName}'e hoş geldiniz
         </h1>
         <p className="mt-4 max-w-xl text-lg text-slate-600 dark:text-slate-300">
           Kullanıcıları, rolleri, yetkileri ve modülleri tek bir yönetim
@@ -84,7 +86,7 @@ export default function HomePage() {
       </main>
 
       <footer className="mx-auto w-full max-w-6xl px-6 py-6 text-center text-sm text-slate-400">
-        © {new Date().getFullYear()} BaseKit
+        © {new Date().getFullYear()} {siteName}
       </footer>
     </div>
   )

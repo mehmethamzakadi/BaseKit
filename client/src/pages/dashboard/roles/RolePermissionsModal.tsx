@@ -73,7 +73,7 @@ export default function RolePermissionsModal({ role, onClose }: Props) {
             return (
               <div key={group.group}>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-slate-800">{group.group}</p>
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{group.group}</p>
                   <button
                     type="button"
                     onClick={() => toggleGroup(group.items, allChecked)}

@@ -9,6 +9,8 @@ import SearchInput from '@/components/ui/SearchInput'
 import Pagination from '@/components/ui/Pagination'
 import { useAuditLogs } from '@/features/admin/queries'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
+import { buildPageSizeOptions } from '@/lib/pageSize'
 import { getApiErrorMessage } from '@/types/api'
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100]
@@ -27,8 +29,9 @@ const actionLabels: Record<string, string> = {
 const dateFmt = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short', timeStyle: 'medium' })
 
 export default function AuditLogsPage() {
+  const { defaultPageSize } = usePublicSettings()
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim(), 300)
 
@@ -111,7 +114,7 @@ export default function AuditLogsPage() {
               totalCount={data.totalCount}
               totalPages={data.totalPages}
               onPageChange={setPage}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              pageSizeOptions={buildPageSizeOptions(defaultPageSize, PAGE_SIZE_OPTIONS)}
               onPageSizeChange={changePageSize}
             />
           )}

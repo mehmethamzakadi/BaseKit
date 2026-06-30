@@ -11,6 +11,8 @@ import SearchInput from '@/components/ui/SearchInput'
 import Pagination from '@/components/ui/Pagination'
 import { useRoles, useDeleteRole } from '@/features/admin/queries'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
+import { buildPageSizeOptions } from '@/lib/pageSize'
 import { getApiErrorMessage } from '@/types/api'
 import type { RoleDto } from '@/types/admin'
 import RoleFormModal from './RoleFormModal'
@@ -19,8 +21,9 @@ import RolePermissionsModal from './RolePermissionsModal'
 const PAGE_SIZE_OPTIONS = [9, 18, 36]
 
 export default function RolesPage() {
+  const { defaultPageSize } = usePublicSettings()
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(9)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim(), 300)
 
@@ -152,7 +155,7 @@ export default function RolesPage() {
                 totalCount={data.totalCount}
                 totalPages={data.totalPages}
                 onPageChange={setPage}
-                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                pageSizeOptions={buildPageSizeOptions(defaultPageSize, PAGE_SIZE_OPTIONS)}
                 onPageSizeChange={changePageSize}
               />
             </div>

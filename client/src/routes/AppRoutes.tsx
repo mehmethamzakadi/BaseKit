@@ -12,6 +12,8 @@ import ProfilePage from '@/pages/dashboard/profile/ProfilePage'
 import UsersPage from '@/pages/dashboard/users/UsersPage'
 import RolesPage from '@/pages/dashboard/roles/RolesPage'
 import AuditLogsPage from '@/pages/dashboard/audit/AuditLogsPage'
+import SettingsPage from '@/pages/dashboard/settings/SettingsPage'
+import NotificationsPage from '@/pages/dashboard/notifications/NotificationsPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
@@ -36,6 +38,7 @@ export default function AppRoutes() {
 
           {/* Kişisel — her giriş yapan kullanıcı */}
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
 
           {/* Modüller — yetki bazlı */}
           <Route element={<ProtectedRoute permission="catalog.view" />}>
@@ -51,6 +54,9 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="admin.audit.view" />}>
             <Route path="audit" element={<AuditLogsPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="system.settings.view" />}>
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>
       </Route>

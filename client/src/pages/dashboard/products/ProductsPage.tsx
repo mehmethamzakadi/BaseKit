@@ -11,6 +11,8 @@ import Pagination from '@/components/ui/Pagination'
 import { PermissionGate } from '@/features/auth/guards'
 import { useProducts, useDeleteProduct } from '@/features/catalog/queries'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
+import { buildPageSizeOptions } from '@/lib/pageSize'
 import { getApiErrorMessage } from '@/types/api'
 import type { ProductDto } from '@/types/catalog'
 import ProductFormModal from './ProductFormModal'
@@ -19,8 +21,9 @@ const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: '
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 export default function ProductsPage() {
+  const { defaultPageSize } = usePublicSettings()
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const [searchInput, setSearchInput] = useState('')
   const [sort, setSort] = useState('createdat')
   const [desc, setDesc] = useState(true)
@@ -189,7 +192,7 @@ export default function ProductsPage() {
               totalCount={data.totalCount}
               totalPages={data.totalPages}
               onPageChange={setPage}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              pageSizeOptions={buildPageSizeOptions(defaultPageSize, PAGE_SIZE_OPTIONS)}
               onPageSizeChange={changePageSize}
             />
           )}

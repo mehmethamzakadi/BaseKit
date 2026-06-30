@@ -13,6 +13,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useUsers, useDeleteUser, useSetUserActive } from '@/features/admin/queries'
 import { useAuth } from '@/features/auth/useAuth'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
+import { buildPageSizeOptions } from '@/lib/pageSize'
 import { getApiErrorMessage } from '@/types/api'
 import type { UserDto } from '@/types/admin'
 import EditUserRolesModal from './EditUserRolesModal'
@@ -23,8 +25,9 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 export default function UsersPage() {
   const { user: me } = useAuth()
+  const { defaultPageSize } = usePublicSettings()
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(defaultPageSize)
   const [searchInput, setSearchInput] = useState('')
   const search = useDebouncedValue(searchInput.trim(), 300)
 
@@ -189,7 +192,7 @@ export default function UsersPage() {
               totalCount={data.totalCount}
               totalPages={data.totalPages}
               onPageChange={setPage}
-              pageSizeOptions={PAGE_SIZE_OPTIONS}
+              pageSizeOptions={buildPageSizeOptions(defaultPageSize, PAGE_SIZE_OPTIONS)}
               onPageSizeChange={changePageSize}
             />
           )}

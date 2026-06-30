@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { navGroups } from '@/config/navigation'
 import { useAuth } from '@/features/auth/useAuth'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 
 interface SidebarProps {
   /** Mobil çekmece açık mı? */
@@ -11,6 +12,7 @@ interface SidebarProps {
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
   const { hasPermission } = useAuth()
+  const { siteName } = usePublicSettings()
 
   // Yetkiye göre filtrele; boş grupları ele.
   const visibleGroups = navGroups
@@ -37,7 +39,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
-          <span className="text-lg font-bold text-brand-700 dark:text-brand-400">BaseKit</span>
+          <span className="truncate text-lg font-bold text-brand-700 dark:text-brand-400">{siteName}</span>
           <button
             type="button"
             onClick={onClose}
