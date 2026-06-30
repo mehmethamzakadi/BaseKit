@@ -6,6 +6,7 @@ import {
   type UpdateProfileInput,
 } from './profileApi'
 import { useAuth } from '@/features/auth/useAuth'
+import { tokenStorage } from '@/features/auth/tokenStorage'
 import { getApiErrorMessage } from '@/types/api'
 
 /**
@@ -51,7 +52,12 @@ export function useRemoveAvatar() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (body: ChangePasswordInput) => profileApi.changePassword(body),
-    onSuccess: () => toast.success('Şifreniz başarıyla güncellendi.'),
+    onSuccess: (tokens) => {
+      // Backend diğer oturumları iptal edip yeni token çifti döndürür; bu cihazın
+      // oturumu kesintisiz sürsün diye yeni token'ları sakla.
+      tokenStorage.setTokens(tokens)
+      toast.success('Şifreniz güncellendi. Diğer oturumlar sonlandırıldı.')
+    },
     onError: (error) => toast.error(getApiErrorMessage(error)),
   })
 }

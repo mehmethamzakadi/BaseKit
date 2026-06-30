@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
-import type { ProfileResponse } from '@/types/auth'
+import type { ProfileResponse, TokenResponse } from '@/types/auth'
 
 export interface UpdateProfileInput {
   displayName: string | null
@@ -24,6 +24,10 @@ export const profileApi = {
   removeAvatar: () =>
     apiClient.delete<ProfileResponse>('/profile/avatar').then((r) => r.data),
 
+  /**
+   * Şifreyi değiştirir. Backend tüm oturumları iptal edip çağıran istemciye
+   * yeni token çifti döndürür; bu token'lar saklanarak mevcut oturum sürdürülür.
+   */
   changePassword: (body: ChangePasswordInput) =>
-    apiClient.post<{ message: string }>('/profile/change-password', body).then((r) => r.data),
+    apiClient.post<TokenResponse>('/profile/change-password', body).then((r) => r.data),
 }

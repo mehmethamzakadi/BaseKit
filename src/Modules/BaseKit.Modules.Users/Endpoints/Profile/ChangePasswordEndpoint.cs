@@ -1,19 +1,30 @@
+using BaseKit.Modules.Users.Authentication;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Modules.Users.Endpoints;
+using BaseKit.Modules.Users.Persistence;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseKit.Modules.Users.Endpoints.Profile;
 
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
-public sealed record ChangePasswordResponse(string Message);
-
 /// <summary>
 /// Geçerli kullanıcının şifresini değiştirir. Mevcut şifre doğrulanır; yeni
 /// şifre Identity parola kurallarından geçmelidir.
+/// <para>
+/// Güvenlik: Şifre değişince kullanıcının <b>tüm aktif refresh token'ları iptal
+/// edilir</b> (diğer cihaz/oturumlar bir sonraki yenilemede düşer) ve çağıran
+/// istemciye <b>yeni bir token çifti</b> verilir; böylece mevcut oturum açık kalır
+/// ama olası ele geçirilmiş diğer oturumlar sonlandırılır.
+/// </para>
 /// </summary>
-public sealed class ChangePasswordEndpoint(UserManager<AppUser> userManager)
-    : Endpoint<ChangePasswordRequest, ChangePasswordResponse>
+public sealed class ChangePasswordEndpoint(
+    UserManager<AppUser> userManager,
+    ITokenService tokenService,
+    UsersDbContext db)
+    : Endpoint<ChangePasswordRequest, TokenResponse>
 {
     public override void Configure()
     {
@@ -36,6 +47,34 @@ public sealed class ChangePasswordEndpoint(UserManager<AppUser> userManager)
             return;
         }
 
-        await Send.OkAsync(new ChangePasswordResponse("Şifreniz başarıyla güncellendi."), ct);
+        var now = DateTimeOffset.UtcNow;
+
+        // Tüm aktif refresh token'ları iptal et (diğer cihazlar/oturumlar).
+        var activeTokens = await db.RefreshTokens
+            .Where(t => t.UserId == user.Id && t.RevokedAtUtc == null && t.ExpiresAtUtc > now)
+            .ToListAsync(ct);
+        foreach (var token in activeTokens)
+        {
+            token.RevokedAtUtc = now;
+        }
+
+        // Çağıran istemci için yeni token çifti üret; oturum kesintisiz devam etsin.
+        var roles = await userManager.GetRolesAsync(user);
+        var access = tokenService.CreateAccessToken(user, roles);
+        var refresh = tokenService.CreateRefreshToken();
+        db.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = refresh.Hash,
+            CreatedAtUtc = now,
+            ExpiresAtUtc = refresh.ExpiresAtUtc,
+        });
+
+        await db.SaveChangesAsync(ct);
+
+        await Send.OkAsync(
+            new TokenResponse(access.Value, access.ExpiresAtUtc, refresh.RawValue, refresh.ExpiresAtUtc),
+            ct);
     }
 }
