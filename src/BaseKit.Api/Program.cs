@@ -11,8 +11,17 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Yapılandırılmış loglama: Serilog. Yapılandırma appsettings'ten okunur;
+// LogContext zenginleştirmesi ile her log satırı request bağlamını taşır.
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console());
 
 // === Modül kayıt noktası ===
 // Yeni bir modül eklemek için tek yapılması gereken: modülün marker tipini
@@ -110,6 +119,9 @@ await UsersSeeder.SeedAsync(app.Services);
 // İşlenmeyen istisnaları yakala → istemciye RFC7807 ProblemDetails döner
 // (stack trace sızdırmadan). Boru hattının en başında olmalı.
 app.UseExceptionHandler();
+
+// Her HTTP isteğini tek satırda, süre ve durum koduyla özetler (request logging).
+app.UseSerilogRequestLogging();
 
 app.UseCors("spa");
 
