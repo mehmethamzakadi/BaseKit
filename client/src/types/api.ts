@@ -24,18 +24,33 @@ export interface PagedQuery {
 }
 
 /**
- * FastEndpoints varsayılan hata yanıtı. Doğrulama hataları `errors` sözlüğünde
- * alan adına göre gruplanır; genel hatalar da burada toplanır.
+ * API hata yanıtı. İki biçimi de destekler:
+ * - RFC7807 ProblemDetails (FastEndpoints): `title`/`detail` + `errors` dizisi ({ name, reason }).
+ * - Eski FastEndpoints ErrorResponse: `message` + `errors` sözlüğü (alan → mesajlar).
  */
 export interface ApiErrorResponse {
   statusCode?: number
+  status?: number
+  title?: string
+  detail?: string
   message?: string
-  errors?: Record<string, string[]>
+  errors?: Record<string, string[]> | { name?: string; reason?: string }[]
+}
+
+/** Doğrulama hatalarından (her iki biçim) okunabilir mesaj listesi çıkarır. */
+function extractFieldErrors(errors: ApiErrorResponse['errors']): string[] {
+  if (!errors) return []
+  // RFC7807: [{ name, reason }]
+  if (Array.isArray(errors)) {
+    return errors.map((e) => e?.reason).filter((m): m is string => Boolean(m))
+  }
+  // Eski biçim: { field: [msg, ...] }
+  return Object.values(errors).flat().filter(Boolean)
 }
 
 /**
  * Bir hatadan kullanıcıya gösterilebilecek anlamlı bir mesaj çıkarır.
- * Axios/FastEndpoints hata gövdesini güvenli şekilde ayrıştırır.
+ * Axios/FastEndpoints (ProblemDetails veya eski) hata gövdesini güvenli ayrıştırır.
  */
 export function getApiErrorMessage(
   error: unknown,
@@ -43,10 +58,10 @@ export function getApiErrorMessage(
 ): string {
   if (error instanceof AxiosError) {
     const data = error.response?.data as ApiErrorResponse | undefined
-    if (data?.errors) {
-      const messages = Object.values(data.errors).flat().filter(Boolean)
-      if (messages.length > 0) return messages.join(' ')
-    }
+    const fieldErrors = extractFieldErrors(data?.errors)
+    if (fieldErrors.length > 0) return fieldErrors.join(' ')
+    if (data?.detail) return data.detail
+    if (data?.title) return data.title
     if (data?.message) return data.message
     if (error.code === 'ERR_NETWORK') return 'Sunucuya ulaşılamıyor.'
     if (error.message) return error.message

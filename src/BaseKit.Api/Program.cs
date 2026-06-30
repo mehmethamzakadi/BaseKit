@@ -27,6 +27,9 @@ var moduleAssemblies = new[]
 builder.Services.AddModules(builder.Configuration, moduleAssemblies);
 builder.Services.AddFastEndpoints(options => options.Assemblies = moduleAssemblies);
 
+// İşlenmeyen istisnalar için RFC7807 ProblemDetails üretimi (UseExceptionHandler ile).
+builder.Services.AddProblemDetails();
+
 // API dokümantasyonu: FastEndpoints + NSwag. Swagger UI /swagger adresinde sunulur.
 // JWT bearer auth tanımı eklenir; UI'dan "Authorize" ile token girilebilir.
 builder.Services.SwaggerDocument(o =>
@@ -86,13 +89,21 @@ var app = builder.Build();
 await app.Services.MigrateModulesAsync();
 await UsersSeeder.SeedAsync(app.Services);
 
+// İşlenmeyen istisnaları yakala → istemciye RFC7807 ProblemDetails döner
+// (stack trace sızdırmadan). Boru hattının en başında olmalı.
+app.UseExceptionHandler();
+
 app.UseCors("spa");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseFastEndpoints(config =>
-    config.Security.PermissionsClaimType = PermissionClaimsTransformation.PermissionClaimType);
+{
+    config.Security.PermissionsClaimType = PermissionClaimsTransformation.PermissionClaimType;
+    // Doğrulama hataları tutarlı RFC7807 ProblemDetails biçiminde döner.
+    config.Errors.UseProblemDetails();
+});
 
 // Swagger UI'ı yalnızca Development'ta aç (üretimde kapalı kalsın).
 if (app.Environment.IsDevelopment())
