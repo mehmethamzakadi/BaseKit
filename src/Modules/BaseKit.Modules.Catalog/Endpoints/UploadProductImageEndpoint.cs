@@ -45,6 +45,7 @@ public sealed class UploadProductImageEndpoint(
         }
 
         var file = Files[0];
+        var oldKey = product.ImageObjectKey;
         var objectKey = $"products/{product.Id}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
         await using (var stream = file.OpenReadStream())
@@ -55,6 +56,12 @@ public sealed class UploadProductImageEndpoint(
         product.ImageObjectKey = objectKey;
         product.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
+
+        // Yeni görsel kaydedildikten sonra eskisini depodan temizle (orphan önleme).
+        if (!string.IsNullOrEmpty(oldKey) && oldKey != objectKey)
+        {
+            await storage.DeleteAsync(oldKey, ct);
+        }
 
         await cache.RemoveAsync(CatalogCacheKeys.Product(product.Id), ct);
 

@@ -12,4 +12,7 @@ public interface IFileStorage
 
     Task<string> GetPresignedUrlAsync(
         string objectKey, int expirySeconds = 3600, CancellationToken ct = default);
+
+    /// <summary>Nesneyi siler. Nesne yoksa sessizce başarılı sayılır (idempotent).</summary>
+    Task DeleteAsync(string objectKey, CancellationToken ct = default);
 }

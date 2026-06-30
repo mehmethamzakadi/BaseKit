@@ -1,4 +1,5 @@
 using BaseKit.Modules.Catalog.Persistence;
+using BaseKit.Shared.Storage;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -7,8 +8,8 @@ namespace BaseKit.Modules.Catalog.Endpoints;
 
 public sealed record DeleteProductRequest(Guid Id);
 
-/// <summary>Ürünü siler. Kimlik doğrulaması gerektirir.</summary>
-public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache cache)
+/// <summary>Ürünü siler ve varsa görselini nesne deposundan temizler.</summary>
+public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache cache, IFileStorage storage)
     : Endpoint<DeleteProductRequest>
 {
     public override void Configure()
@@ -19,6 +20,12 @@ public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache
 
     public override async Task HandleAsync(DeleteProductRequest req, CancellationToken ct)
     {
+        // Görsel anahtarını silmeden önce al (orphan temizliği için).
+        var imageKey = await db.Products
+            .Where(x => x.Id == req.Id)
+            .Select(x => x.ImageObjectKey)
+            .FirstOrDefaultAsync(ct);
+
         var deleted = await db.Products
             .Where(x => x.Id == req.Id)
             .ExecuteDeleteAsync(ct);
@@ -27,6 +34,11 @@ public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache
         {
             await Send.NotFoundAsync(ct);
             return;
+        }
+
+        if (!string.IsNullOrEmpty(imageKey))
+        {
+            await storage.DeleteAsync(imageKey, ct);
         }
 
         await cache.RemoveAsync(CatalogCacheKeys.Product(req.Id), ct);

@@ -52,6 +52,7 @@ public sealed class UploadAvatarEndpoint(UserManager<AppUser> userManager, IFile
             return;
         }
 
+        var oldKey = user.AvatarObjectKey;
         var objectKey = $"avatars/{user.Id}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         await using (var stream = file.OpenReadStream())
         {
@@ -60,6 +61,12 @@ public sealed class UploadAvatarEndpoint(UserManager<AppUser> userManager, IFile
 
         user.AvatarObjectKey = objectKey;
         await userManager.UpdateAsync(user);
+
+        // Eski avatarı depodan temizle (orphan önleme).
+        if (!string.IsNullOrEmpty(oldKey) && oldKey != objectKey)
+        {
+            await storage.DeleteAsync(oldKey, ct);
+        }
 
         var avatarUrl = await storage.GetPresignedUrlAsync(objectKey, ct: ct);
         await Send.OkAsync(new ProfileResponse(user.Email, user.DisplayName, avatarUrl), ct);

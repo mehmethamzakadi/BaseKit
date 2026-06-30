@@ -33,6 +33,13 @@ public sealed class MinioFileStorage(IMinioClient client, IOptions<MinioOptions>
                 .WithObject(objectKey)
                 .WithExpiry(expirySeconds));
 
+    public Task DeleteAsync(string objectKey, CancellationToken ct = default)
+        => client.RemoveObjectAsync(
+            new RemoveObjectArgs()
+                .WithBucket(_options.Bucket)
+                .WithObject(objectKey),
+            ct);
+
     private async Task EnsureBucketAsync(CancellationToken ct)
     {
         var exists = await client.BucketExistsAsync(
