@@ -59,7 +59,7 @@ export default function EditUserRolesModal({ user, onClose }: Props) {
           {roles?.map((role) => (
             <label
               key={role.id}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 transition hover:bg-slate-50"
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 transition hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
             >
               <input
                 type="checkbox"

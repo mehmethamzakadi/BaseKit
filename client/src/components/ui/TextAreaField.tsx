@@ -13,7 +13,7 @@ export default function TextAreaField({ label, className, ...props }: TextAreaFi
 
   return (
     <div className="space-y-1">
-      <label htmlFor={props.name} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={props.name} className="block text-sm font-medium text-slate-700 dark:text-slate-200">
         {label}
       </label>
       <textarea
@@ -22,13 +22,13 @@ export default function TextAreaField({ label, className, ...props }: TextAreaFi
         {...field}
         {...props}
         aria-invalid={hasError}
-        className={`w-full resize-y rounded-lg border px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 ${
+        className={`w-full resize-y rounded-lg border px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:ring-2 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 ${
           hasError
-            ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-            : 'border-slate-300 focus:border-brand-500 focus:ring-brand-100'
+            ? 'border-red-400 focus:border-red-500 focus:ring-red-100 dark:border-red-700'
+            : 'border-slate-300 focus:border-brand-500 focus:ring-brand-100 dark:border-slate-600'
         } ${className ?? ''}`}
       />
-      {hasError && <p className="text-xs text-red-600">{meta.error}</p>}
+      {hasError && <p className="text-xs text-red-600 dark:text-red-400">{meta.error}</p>}
     </div>
   )
 }

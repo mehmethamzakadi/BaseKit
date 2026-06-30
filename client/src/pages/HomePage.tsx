@@ -44,10 +44,10 @@ export default function HomePage() {
         <span className="mb-4 rounded-full bg-brand-100 px-3 py-1 text-sm font-medium text-brand-700">
           Modüler Yönetim Platformu
         </span>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-50 sm:text-5xl">
           BaseKit'e hoş geldiniz
         </h1>
-        <p className="mt-4 max-w-xl text-lg text-slate-600">
+        <p className="mt-4 max-w-xl text-lg text-slate-600 dark:text-slate-300">
           Kullanıcıları, rolleri, yetkileri ve modülleri tek bir yönetim
           panelinden güvenle yönetin.
         </p>
@@ -69,7 +69,7 @@ export default function HomePage() {
               </Link>
               <Link
                 to="/login"
-                className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 Giriş yap
               </Link>

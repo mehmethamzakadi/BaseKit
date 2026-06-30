@@ -111,13 +111,13 @@ export default function ProductsPage() {
         <ErrorState message={getApiErrorMessage(error)} onRetry={() => void refetch()} />
       ) : hasResults ? (
         <div
-          className={`overflow-hidden rounded-xl border border-slate-200 bg-white transition-opacity ${
+          className={`overflow-hidden rounded-xl border border-slate-200 bg-white transition-opacity dark:border-slate-700 dark:bg-slate-900 ${
             isPlaceholderData ? 'opacity-60' : ''
           }`}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 <tr>
                   <SortableTh
                     label="Ürün"
@@ -137,28 +137,28 @@ export default function ProductsPage() {
                   <th className="px-4 py-3 text-right font-semibold">İşlem</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {products.map((product) => (
-                  <tr key={product.id} className="hover:bg-slate-50">
+                  <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-slate-800">{product.name}</p>
+                      <p className="font-medium text-slate-800 dark:text-slate-100">{product.name}</p>
                       {product.description && (
-                        <p className="max-w-md truncate text-xs text-slate-500">
+                        <p className="max-w-md truncate text-xs text-slate-500 dark:text-slate-400">
                           {product.description}
                         </p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{currency.format(product.price)}</td>
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{currency.format(product.price)}</td>
                     <td className="px-4 py-3">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
                           alt={product.name}
                           loading="lazy"
-                          className="size-12 rounded-lg border border-slate-200 object-cover"
+                          className="size-12 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
                         />
                       ) : (
-                        <span className="flex size-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300">
+                        <span className="flex size-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300 dark:border-slate-700 dark:text-slate-600">
                           <ImageIcon className="size-5" />
                         </span>
                       )}
@@ -247,7 +247,7 @@ function SortableTh({ label, field, sort, desc, onSort }: SortableThProps) {
       <button
         type="button"
         onClick={() => onSort(field)}
-        className="inline-flex items-center gap-1 uppercase tracking-wider transition hover:text-slate-700"
+        className="inline-flex items-center gap-1 uppercase tracking-wider transition hover:text-slate-700 dark:hover:text-slate-200"
       >
         {label}
         {active ? (

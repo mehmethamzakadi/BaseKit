@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+/* Dark mode: sınıf stratejisi. <html> üzerine .dark eklenince dark: varyantları
+   etkinleşir (sistem/manuel tercih useTheme ile yönetilir). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Tema değişkenleri (Tailwind v4 @theme). Marka rengini buradan yönet;
    bg-brand-600, text-brand-700 gibi sınıflar otomatik üretilir. */
 @theme {
@@ -22,5 +26,5 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
 }

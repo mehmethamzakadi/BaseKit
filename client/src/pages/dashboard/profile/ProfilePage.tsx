@@ -41,12 +41,12 @@ export default function ProfilePage() {
 
       <div className="space-y-6">
         {/* --- Profil fotoğrafı + temel bilgiler --- */}
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
           <div className="flex flex-wrap items-center gap-5">
             <Avatar src={user?.avatarUrl} name={displayLabel} size={80} className="text-2xl" />
             <div className="min-w-0">
-              <p className="truncate text-lg font-semibold text-slate-900">{displayLabel}</p>
-              <p className="truncate text-sm text-slate-500">{user?.email}</p>
+              <p className="truncate text-lg font-semibold text-slate-900 dark:text-slate-100">{displayLabel}</p>
+              <p className="truncate text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {user?.roles.length ? (
                   user.roles.map((role) => (
@@ -89,7 +89,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <hr className="my-6 border-slate-100" />
+          <hr className="my-6 border-slate-100 dark:border-slate-800" />
 
           <Formik
             initialValues={{ displayName: user?.displayName ?? '' }}
@@ -119,9 +119,9 @@ export default function ProfilePage() {
         </section>
 
         {/* --- Şifre değiştirme --- */}
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="text-base font-semibold text-slate-900">Şifre değiştir</h2>
-          <p className="mt-0.5 text-sm text-slate-500">
+        <section className="rounded-xl border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Şifre değiştir</h2>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             Güvenliğiniz için güçlü ve benzersiz bir şifre kullanın.
           </p>
 

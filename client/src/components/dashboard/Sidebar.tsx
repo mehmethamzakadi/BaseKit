@@ -32,16 +32,16 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 dark:border-slate-800 dark:bg-slate-900 md:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5">
-          <span className="text-lg font-bold text-brand-700">BaseKit</span>
+        <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
+          <span className="text-lg font-bold text-brand-700 dark:text-brand-400">BaseKit</span>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 md:hidden"
+            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 md:hidden"
             aria-label="Menüyü kapat"
           >
             <X className="size-5" />
@@ -52,7 +52,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           {visibleGroups.map((group, index) => (
             <div key={group.label ?? index}>
               {group.label && (
-                <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   {group.label}
                 </p>
               )}
@@ -66,8 +66,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                           isActive
-                            ? 'bg-brand-50 text-brand-700'
-                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
                         }`
                       }
                     >

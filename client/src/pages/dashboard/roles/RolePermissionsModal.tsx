@@ -86,7 +86,7 @@ export default function RolePermissionsModal({ role, onClose }: Props) {
                   {group.items.map((item) => (
                     <label
                       key={item.name}
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-slate-50"
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-slate-50 dark:hover:bg-slate-800"
                     >
                       <input
                         type="checkbox"
@@ -94,7 +94,7 @@ export default function RolePermissionsModal({ role, onClose }: Props) {
                         onChange={() => toggle(item.name)}
                         className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
                       />
-                      <span className="text-sm text-slate-700">{item.displayName}</span>
+                      <span className="text-sm text-slate-700 dark:text-slate-200">{item.displayName}</span>
                     </label>
                   ))}
                 </div>

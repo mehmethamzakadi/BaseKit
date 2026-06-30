@@ -109,13 +109,13 @@ export default function RolesPage() {
             {roles.map((role) => (
               <div
                 key={role.id}
-                className="flex flex-col rounded-xl border border-slate-200 bg-white p-4"
+                className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="truncate font-semibold text-slate-900">{role.name}</h3>
+                    <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">{role.name}</h3>
                     {role.description && (
-                      <p className="mt-0.5 text-sm text-slate-500">{role.description}</p>
+                      <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{role.description}</p>
                     )}
                   </div>
                   <Badge color="brand">{role.permissions.length} yetki</Badge>
@@ -145,7 +145,7 @@ export default function RolesPage() {
             ))}
           </div>
           {data && (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-white">
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
               <Pagination
                 page={data.page}
                 pageSize={data.pageSize}
