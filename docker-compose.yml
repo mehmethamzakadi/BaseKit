@@ -70,6 +70,16 @@ services:
       timeout: 5s
       retries: 10
 
+  # Geliştirme SMTP yakalayıcı. E-postayı gerçekten göndermeden web UI'da görmek
+  # için: appsettings "Email:Provider" değerini "Smtp" yapın (Host=localhost, Port=1025).
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: basekit-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+
 volumes:
   postgres_data:
   redis_data:

@@ -3,6 +3,7 @@ using BaseKit.Modules.System;
 using BaseKit.Modules.Users;
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Seed;
+using BaseKit.Shared.Email;
 using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
 using System.Threading.RateLimiting;
@@ -74,6 +75,7 @@ builder.Services.SwaggerDocument(o =>
 builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration.GetConnectionString("Redis"));
 builder.Services.AddObjectStorage(builder.Configuration);
+builder.Services.AddEmailSender(builder.Configuration);
 
 // Kuyruk: RabbitMQ + MassTransit. Consumer'lar modül assembly'lerinden keşfedilir.
 builder.Services.AddMassTransit(bus =>

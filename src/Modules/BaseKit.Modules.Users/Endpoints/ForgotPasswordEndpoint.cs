@@ -1,8 +1,9 @@
+using System.Net;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Email;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace BaseKit.Modules.Users.Endpoints;
 
@@ -13,15 +14,15 @@ public sealed record ForgotPasswordRequest(string Email);
 /// ya da olmasın <b>her zaman 200</b> ve aynı genel mesaj döner (kullanıcı
 /// numaralandırma sızıntısını önler).
 /// <para>
-/// Üretimde token kullanıcıya e-posta ile gönderilmelidir. Bu projede henüz
-/// SMTP yok; bu yüzden token sunucu loguna yazılır ve <b>yalnızca Development
-/// ortamında</b> yanıt gövdesinde de döndürülür (geliştirme kolaylığı).
+/// Token kullanıcıya <see cref="IEmailSender"/> ile e-posta olarak gönderilir
+/// (geliştirmede log uygulaması, üretimde SMTP). Yalnızca Development ortamında
+/// token yanıt gövdesinde de döner (geliştirme kolaylığı).
 /// </para>
 /// </summary>
 public sealed class ForgotPasswordEndpoint(
     UserManager<AppUser> userManager,
-    IHostEnvironment environment,
-    ILogger<ForgotPasswordEndpoint> logger)
+    IEmailSender emailSender,
+    IHostEnvironment environment)
     : Endpoint<ForgotPasswordRequest, ForgotPasswordResponse>
 {
     public override void Configure()
@@ -45,10 +46,13 @@ public sealed class ForgotPasswordEndpoint(
 
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-        // TODO: Üretimde token'ı e-posta ile gönder (örn. IEmailSender).
-        logger.LogInformation(
-            "Şifre sıfırlama token'ı üretildi. Kullanıcı: {Email}, Token: {Token}",
-            user.Email, token);
+        var html = $"""
+            <p>Merhaba,</p>
+            <p>Şifrenizi sıfırlamak için aşağıdaki sıfırlama anahtarını kullanın:</p>
+            <pre>{WebUtility.HtmlEncode(token)}</pre>
+            <p>Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+            """;
+        await emailSender.SendAsync(user.Email!, "Şifre sıfırlama", html, ct);
 
         var devToken = environment.IsDevelopment() ? token : null;
         await Send.OkAsync(new ForgotPasswordResponse(genericMessage, devToken), ct);
