@@ -95,11 +95,15 @@ export default function ProductFormModal({ product, onClose }: Props) {
                 permission="catalog.products.update"
                 fallback={<p className="text-xs text-slate-400">Görsel yükleme yetkiniz yok.</p>}
               >
-                {preview ? (
-                  <img src={preview} alt="Ürün görseli" className="mb-3 size-32 rounded-lg object-cover" />
-                ) : product?.imageObjectKey ? (
-                  <p className="mb-3 text-xs text-slate-500">Bu ürünün bir görseli mevcut.</p>
-                ) : null}
+                {(preview ?? product?.imageUrl) ? (
+                  <img
+                    src={preview ?? product?.imageUrl ?? ''}
+                    alt="Ürün görseli"
+                    className="mb-3 size-32 rounded-lg border border-slate-200 object-cover"
+                  />
+                ) : (
+                  <p className="mb-3 text-xs text-slate-500">Bu ürünün henüz görseli yok.</p>
+                )}
                 <input
                   ref={fileRef}
                   type="file"

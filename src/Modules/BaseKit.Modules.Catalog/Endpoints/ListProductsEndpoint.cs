@@ -1,5 +1,6 @@
 using BaseKit.Modules.Catalog.Persistence;
 using BaseKit.Shared.Pagination;
+using BaseKit.Shared.Storage;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +17,7 @@ public sealed class ListProductsRequest : PagedQuery;
 /// Ürünleri sayfalı, aranabilir ve sıralanabilir biçimde listeler. Sonuç sorguya
 /// göre değiştiğinden cache'lenmez (tekil ürün getirme cache'lidir).
 /// </summary>
-public sealed class ListProductsEndpoint(CatalogDbContext db)
+public sealed class ListProductsEndpoint(CatalogDbContext db, IFileStorage storage)
     : Endpoint<ListProductsRequest, PagedResult<ProductResponse>>
 {
     public override void Configure()
@@ -51,9 +52,16 @@ public sealed class ListProductsEndpoint(CatalogDbContext db)
 
         var result = await query
             .Select(p => new ProductResponse(
-                p.Id, p.Name, p.Description, p.Price, p.ImageObjectKey, p.CreatedAtUtc, p.UpdatedAtUtc))
+                p.Id, p.Name, p.Description, p.Price, p.ImageObjectKey, null, p.CreatedAtUtc, p.UpdatedAtUtc))
             .ToPagedResultAsync(req, ct);
 
-        await Send.OkAsync(result, ct);
+        // Sayfadaki görselli ürünler için geçici (presigned) URL üret.
+        var items = new List<ProductResponse>(result.Items.Count);
+        foreach (var item in result.Items)
+        {
+            items.Add(await item.WithImageUrlAsync(storage, ct));
+        }
+
+        await Send.OkAsync(result with { Items = items }, ct);
     }
 }

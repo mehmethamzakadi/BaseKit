@@ -4,6 +4,8 @@ export interface ProductDto {
   description: string | null
   price: number
   imageObjectKey: string | null
+  /** Görseli göstermek için geçici (presigned) URL; görsel yoksa null. */
+  imageUrl: string | null
   createdAtUtc: string
   updatedAtUtc: string
 }

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { ArrowDown, ArrowUp, ChevronsUpDown, ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import Button from '@/components/ui/Button'
-import Badge from '@/components/ui/Badge'
 import Spinner from '@/components/ui/Spinner'
 import ErrorState from '@/components/ui/ErrorState'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
@@ -150,11 +149,16 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-700">{currency.format(product.price)}</td>
                     <td className="px-4 py-3">
-                      {product.imageObjectKey ? (
-                        <Badge color="green">Yüklü</Badge>
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          loading="lazy"
+                          className="size-12 rounded-lg border border-slate-200 object-cover"
+                        />
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-slate-400">
-                          <ImageIcon className="size-4" /> yok
+                        <span className="flex size-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300">
+                          <ImageIcon className="size-5" />
                         </span>
                       )}
                     </td>
