@@ -18,6 +18,5 @@ public sealed record ProductResponse(
 /// <summary>Cache anahtarları tek yerde toplanır.</summary>
 public static class CatalogCacheKeys
 {
-    public const string AllProducts = "catalog:products:all";
     public static string Product(Guid id) => $"catalog:product:{id}";
 }

@@ -32,14 +32,8 @@ public sealed class UpdateProductEndpoint(CatalogDbContext db, IDistributedCache
         product.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        await InvalidateAsync(req.Id, ct);
+        await cache.RemoveAsync(CatalogCacheKeys.Product(req.Id), ct);
 
         await Send.OkAsync(ProductResponse.From(product), ct);
-    }
-
-    private async Task InvalidateAsync(Guid id, CancellationToken ct)
-    {
-        await cache.RemoveAsync(CatalogCacheKeys.AllProducts, ct);
-        await cache.RemoveAsync(CatalogCacheKeys.Product(id), ct);
     }
 }

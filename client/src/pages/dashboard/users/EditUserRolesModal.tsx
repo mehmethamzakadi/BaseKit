@@ -13,7 +13,9 @@ interface Props {
 }
 
 export default function EditUserRolesModal({ user, onClose }: Props) {
-  const { data: roles, isLoading, isError, error } = useRoles()
+  // Rol atama seçicisi tüm rolleri ister; sayfalamayı bypass etmek için yüksek pageSize.
+  const { data: rolesPage, isLoading, isError, error } = useRoles({ pageSize: 100 })
+  const roles = rolesPage?.items
   const assign = useAssignUserRoles()
   const [selected, setSelected] = useState<string[]>(user.roles)
 

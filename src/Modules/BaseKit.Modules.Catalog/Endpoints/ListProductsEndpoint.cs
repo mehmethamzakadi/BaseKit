@@ -1,14 +1,23 @@
 using BaseKit.Modules.Catalog.Persistence;
-using BaseKit.Shared.Caching;
+using BaseKit.Shared.Pagination;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace BaseKit.Modules.Catalog.Endpoints;
 
-/// <summary>Tüm ürünleri listeler. Anonim erişime açık ve cache'lenir.</summary>
-public sealed class ListProductsEndpoint(CatalogDbContext db, IDistributedCache cache)
-    : EndpointWithoutRequest<IReadOnlyList<ProductResponse>>
+/// <summary>
+/// Ürün listesi sorgusu. <see cref="PagedQuery"/>'den sayfalama/arama/sıralama
+/// alanlarını miras alır (query string'den bağlanır:
+/// ?page=1&amp;pageSize=20&amp;search=...&amp;sort=name&amp;desc=true).
+/// </summary>
+public sealed class ListProductsRequest : PagedQuery;
+
+/// <summary>
+/// Ürünleri sayfalı, aranabilir ve sıralanabilir biçimde listeler. Sonuç sorguya
+/// göre değiştiğinden cache'lenmez (tekil ürün getirme cache'lidir).
+/// </summary>
+public sealed class ListProductsEndpoint(CatalogDbContext db)
+    : Endpoint<ListProductsRequest, PagedResult<ProductResponse>>
 {
     public override void Configure()
     {
@@ -16,23 +25,35 @@ public sealed class ListProductsEndpoint(CatalogDbContext db, IDistributedCache 
         Permissions(CatalogPermissions.View);
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(ListProductsRequest req, CancellationToken ct)
     {
-        var products = await cache.GetOrSetAsync(
-            CatalogCacheKeys.AllProducts,
-            async () =>
-            {
-                var entities = await db.Products
-                    .AsNoTracking()
-                    .OrderByDescending(x => x.CreatedAtUtc)
-                    .ToListAsync(ct);
-                return (IReadOnlyList<ProductResponse>)entities
-                    .Select(ProductResponse.From)
-                    .ToList();
-            },
-            TimeSpan.FromMinutes(5),
-            ct);
+        var query = db.Products.AsNoTracking();
 
-        await Send.OkAsync(products, ct);
+        // Arama: ad veya açıklama içinde (büyük/küçük harf duyarsız, PostgreSQL ILIKE).
+        if (!string.IsNullOrWhiteSpace(req.Search))
+        {
+            var term = req.Search.Trim();
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, $"%{term}%") ||
+                (p.Description != null && EF.Functions.ILike(p.Description, $"%{term}%")));
+        }
+
+        // Sıralama: yalnızca izin verilen alanlar; bilinmeyen değer varsayılana düşer.
+        query = req.Sort?.ToLowerInvariant() switch
+        {
+            "name" => req.Desc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
+            "price" => req.Desc ? query.OrderByDescending(p => p.Price) : query.OrderBy(p => p.Price),
+            "createdat" => req.Desc
+                ? query.OrderByDescending(p => p.CreatedAtUtc)
+                : query.OrderBy(p => p.CreatedAtUtc),
+            _ => query.OrderByDescending(p => p.CreatedAtUtc),
+        };
+
+        var result = await query
+            .Select(p => new ProductResponse(
+                p.Id, p.Name, p.Description, p.Price, p.ImageObjectKey, p.CreatedAtUtc, p.UpdatedAtUtc))
+            .ToPagedResultAsync(req, ct);
+
+        await Send.OkAsync(result, ct);
     }
 }

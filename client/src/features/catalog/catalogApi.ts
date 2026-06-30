@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/apiClient'
+import type { PagedQuery, PagedResult } from '@/types/api'
 import type { ProductDto, UploadImageResponse } from '@/types/catalog'
 
 export interface ProductInput {
@@ -8,7 +9,10 @@ export interface ProductInput {
 }
 
 export const catalogApi = {
-  list: () => apiClient.get<ProductDto[]>('/catalog/products').then((r) => r.data),
+  list: (params: PagedQuery = {}) =>
+    apiClient
+      .get<PagedResult<ProductDto>>('/catalog/products', { params })
+      .then((r) => r.data),
 
   create: (body: ProductInput) =>
     apiClient.post<ProductDto>('/catalog/products', body).then((r) => r.data),

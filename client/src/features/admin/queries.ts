@@ -1,21 +1,32 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { adminApi } from './adminApi'
-import { getApiErrorMessage } from '@/types/api'
+import { getApiErrorMessage, type PagedQuery } from '@/types/api'
 
 export const adminKeys = {
+  /** Sorgu kökleri — mutasyonlardan (prefix eşleşmeli) toplu invalidate için. */
   users: ['admin', 'users'] as const,
   roles: ['admin', 'roles'] as const,
   permissions: ['admin', 'permissions'] as const,
+  usersList: (params: PagedQuery) => ['admin', 'users', 'list', params] as const,
+  rolesList: (params: PagedQuery) => ['admin', 'roles', 'list', params] as const,
 }
 
 // --- Sorgular ---
-export function useUsers() {
-  return useQuery({ queryKey: adminKeys.users, queryFn: adminApi.listUsers })
+export function useUsers(params: PagedQuery) {
+  return useQuery({
+    queryKey: adminKeys.usersList(params),
+    queryFn: () => adminApi.listUsers(params),
+    placeholderData: keepPreviousData,
+  })
 }
 
-export function useRoles() {
-  return useQuery({ queryKey: adminKeys.roles, queryFn: adminApi.listRoles })
+export function useRoles(params: PagedQuery = {}) {
+  return useQuery({
+    queryKey: adminKeys.rolesList(params),
+    queryFn: () => adminApi.listRoles(params),
+    placeholderData: keepPreviousData,
+  })
 }
 
 export function usePermissions() {

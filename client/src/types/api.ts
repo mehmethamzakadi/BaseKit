@@ -1,6 +1,29 @@
 import { AxiosError } from 'axios'
 
 /**
+ * Backend `PagedResult<T>` karşılığı. Liste verisini sayfalama meta bilgisiyle
+ * birlikte taşır.
+ */
+export interface PagedResult<T> {
+  items: T[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+  hasPrevious: boolean
+  hasNext: boolean
+}
+
+/** Sayfalı/aranabilir liste endpoint'leri için ortak query parametreleri. */
+export interface PagedQuery {
+  page?: number
+  pageSize?: number
+  search?: string
+  sort?: string
+  desc?: boolean
+}
+
+/**
  * FastEndpoints varsayılan hata yanıtı. Doğrulama hataları `errors` sözlüğünde
  * alan adına göre gruplanır; genel hatalar da burada toplanır.
  */

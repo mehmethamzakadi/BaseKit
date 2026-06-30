@@ -5,7 +5,6 @@
   </Folder>
   <Folder Name="/src/Modules/">
     <Project Path="src/Modules/BaseKit.Modules.Catalog/BaseKit.Modules.Catalog.csproj" />
-    <Project Path="src/Modules/BaseKit.Modules.Notes/BaseKit.Modules.Notes.csproj" />
     <Project Path="src/Modules/BaseKit.Modules.System/BaseKit.Modules.System.csproj" />
     <Project Path="src/Modules/BaseKit.Modules.Users/BaseKit.Modules.Users.csproj" />
   </Folder>

@@ -20,7 +20,6 @@ var moduleAssemblies = new[]
     typeof(SystemModule).Assembly,
     typeof(UsersModule).Assembly,
     typeof(CatalogModule).Assembly,
-    typeof(BaseKit.Modules.Notes.NotesModule).Assembly,
     // >>> SCAFFOLD:MODULES <<< (bu satırı silmeyin; new-module.ps1 buraya ekler)
 };
 

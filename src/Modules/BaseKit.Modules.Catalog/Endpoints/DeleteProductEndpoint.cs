@@ -29,7 +29,6 @@ public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache
             return;
         }
 
-        await cache.RemoveAsync(CatalogCacheKeys.AllProducts, ct);
         await cache.RemoveAsync(CatalogCacheKeys.Product(req.Id), ct);
 
         await Send.NoContentAsync(ct);

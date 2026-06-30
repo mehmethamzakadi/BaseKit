@@ -8,7 +8,6 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage'
 import DashboardLayout from '@/pages/dashboard/DashboardLayout'
 import DashboardHomePage from '@/pages/dashboard/DashboardHomePage'
 import ProductsPage from '@/pages/dashboard/products/ProductsPage'
-import NotesPage from '@/pages/dashboard/notes/NotesPage'
 import UsersPage from '@/pages/dashboard/users/UsersPage'
 import RolesPage from '@/pages/dashboard/roles/RolesPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
@@ -36,9 +35,6 @@ export default function AppRoutes() {
           {/* Modüller — yetki bazlı */}
           <Route element={<ProtectedRoute permission="catalog.view" />}>
             <Route path="products" element={<ProductsPage />} />
-          </Route>
-          <Route element={<ProtectedRoute permission="notes.view" />}>
-            <Route path="notes" element={<NotesPage />} />
           </Route>
 
           {/* Yönetim — yetki bazlı */}

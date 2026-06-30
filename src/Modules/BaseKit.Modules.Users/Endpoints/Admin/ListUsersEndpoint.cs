@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Pagination;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +9,12 @@ namespace BaseKit.Modules.Users.Endpoints.Admin;
 
 public sealed record UserDto(Guid Id, string? Email, IReadOnlyList<string> Roles);
 
-/// <summary>Tüm kullanıcıları rolleriyle birlikte listeler.</summary>
+/// <summary>Kullanıcı listesi sorgusu (sayfalama + e-posta araması).</summary>
+public sealed class ListUsersRequest : PagedQuery;
+
+/// <summary>Kullanıcıları rolleriyle birlikte, sayfalı ve aranabilir biçimde listeler.</summary>
 public sealed class ListUsersEndpoint(UserManager<AppUser> userManager)
-    : EndpointWithoutRequest<IReadOnlyList<UserDto>>
+    : Endpoint<ListUsersRequest, PagedResult<UserDto>>
 {
     public override void Configure()
     {
@@ -18,17 +22,33 @@ public sealed class ListUsersEndpoint(UserManager<AppUser> userManager)
         Permissions(AdminPermissions.UsersManage);
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(ListUsersRequest req, CancellationToken ct)
     {
-        var users = await userManager.Users.ToListAsync(ct);
+        var query = userManager.Users;
 
-        var result = new List<UserDto>(users.Count);
-        foreach (var user in users)
+        if (!string.IsNullOrWhiteSpace(req.Search))
         {
-            var roles = await userManager.GetRolesAsync(user);
-            result.Add(new UserDto(user.Id, user.Email, roles.ToList()));
+            var term = req.Search.Trim();
+            query = query.Where(u =>
+                u.Email != null && EF.Functions.ILike(u.Email, $"%{term}%"));
         }
 
-        await Send.OkAsync(result, ct);
+        query = query.OrderBy(u => u.Email);
+
+        var totalCount = await query.CountAsync(ct);
+        var pageUsers = await query
+            .Skip((req.Page - 1) * req.PageSize)
+            .Take(req.PageSize)
+            .ToListAsync(ct);
+
+        // Roller kullanıcı başına ayrı sorgulanır; yalnızca sayfadaki kayıtlar için.
+        var items = new List<UserDto>(pageUsers.Count);
+        foreach (var user in pageUsers)
+        {
+            var roles = await userManager.GetRolesAsync(user);
+            items.Add(new UserDto(user.Id, user.Email, roles.ToList()));
+        }
+
+        await Send.OkAsync(new PagedResult<UserDto>(items, req.Page, req.PageSize, totalCount), ct);
     }
 }

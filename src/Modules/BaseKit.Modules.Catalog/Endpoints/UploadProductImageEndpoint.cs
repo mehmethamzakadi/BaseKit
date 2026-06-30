@@ -56,7 +56,6 @@ public sealed class UploadProductImageEndpoint(
         product.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
 
-        await cache.RemoveAsync(CatalogCacheKeys.AllProducts, ct);
         await cache.RemoveAsync(CatalogCacheKeys.Product(product.Id), ct);
 
         var url = await storage.GetPresignedUrlAsync(objectKey, ct: ct);

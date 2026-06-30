@@ -1,14 +1,13 @@
 using BaseKit.Modules.Catalog.Domain;
 using BaseKit.Modules.Catalog.Persistence;
 using FastEndpoints;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace BaseKit.Modules.Catalog.Endpoints;
 
 public sealed record CreateProductRequest(string Name, string? Description, decimal Price);
 
 /// <summary>Ürün oluşturur. Kimlik doğrulaması gerektirir (yazma işlemi).</summary>
-public sealed class CreateProductEndpoint(CatalogDbContext db, IDistributedCache cache)
+public sealed class CreateProductEndpoint(CatalogDbContext db)
     : Endpoint<CreateProductRequest, ProductResponse>
 {
     public override void Configure()
@@ -32,8 +31,6 @@ public sealed class CreateProductEndpoint(CatalogDbContext db, IDistributedCache
 
         db.Products.Add(product);
         await db.SaveChangesAsync(ct);
-
-        await cache.RemoveAsync(CatalogCacheKeys.AllProducts, ct);
 
         await Send.CreatedAtAsync<GetProductEndpoint>(
             new { id = product.Id }, ProductResponse.From(product), cancellation: ct);

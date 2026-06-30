@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Package,
-  StickyNote,
   Users,
   ShieldCheck,
   type LucideIcon,
@@ -36,7 +35,6 @@ export const navGroups: NavGroup[] = [
     label: 'Modüller',
     items: [
       { label: 'Katalog', to: '/dashboard/products', icon: Package, permission: 'catalog.view' },
-      { label: 'Notlar', to: '/dashboard/notes', icon: StickyNote, permission: 'notes.view' },
     ],
   },
   {
