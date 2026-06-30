@@ -4,7 +4,7 @@ import PageHeader from '@/components/dashboard/PageHeader'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import Avatar from '@/components/ui/Avatar'
-import Spinner from '@/components/ui/Spinner'
+import TableSkeleton from '@/components/ui/TableSkeleton'
 import ErrorState from '@/components/ui/ErrorState'
 import EmptyState from '@/components/ui/EmptyState'
 import SearchInput from '@/components/ui/SearchInput'
@@ -85,7 +85,7 @@ export default function UsersPage() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={4} />
       ) : isError ? (
         <ErrorState message={getApiErrorMessage(error)} onRetry={() => void refetch()} />
       ) : hasResults ? (

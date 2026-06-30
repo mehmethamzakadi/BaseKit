@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronsUpDown, ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, ImageIcon, Package, Pencil, Plus, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import Button from '@/components/ui/Button'
-import Spinner from '@/components/ui/Spinner'
+import TableSkeleton from '@/components/ui/TableSkeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import SearchInput from '@/components/ui/SearchInput'
@@ -105,7 +106,7 @@ export default function ProductsPage() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <TableSkeleton columns={4} />
       ) : isError ? (
         <ErrorState message={getApiErrorMessage(error)} onRetry={() => void refetch()} />
       ) : hasResults ? (
@@ -194,9 +195,23 @@ export default function ProductsPage() {
           )}
         </div>
       ) : (
-        <p className="text-slate-500">
-          {search ? `"${search}" için sonuç bulunamadı.` : 'Henüz ürün yok.'}
-        </p>
+        <EmptyState
+          icon={Package}
+          title={search ? 'Sonuç bulunamadı' : 'Henüz ürün yok'}
+          description={
+            search ? `"${search}" için eşleşen ürün yok.` : 'İlk ürünü ekleyerek başlayın.'
+          }
+          action={
+            !search && (
+              <PermissionGate permission="catalog.products.create">
+                <Button onClick={openCreate}>
+                  <Plus className="size-4" />
+                  Yeni Ürün
+                </Button>
+              </PermissionGate>
+            )
+          }
+        />
       )}
 
       {formOpen && (

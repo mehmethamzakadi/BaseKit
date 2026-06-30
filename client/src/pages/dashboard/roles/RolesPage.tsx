@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { KeyRound, Pencil, Plus, Trash2 } from 'lucide-react'
+import { KeyRound, Pencil, Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
-import Spinner from '@/components/ui/Spinner'
+import Skeleton from '@/components/ui/Skeleton'
+import EmptyState from '@/components/ui/EmptyState'
 import ErrorState from '@/components/ui/ErrorState'
 import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import SearchInput from '@/components/ui/SearchInput'
@@ -88,7 +89,18 @@ export default function RolesPage() {
       </div>
 
       {isLoading ? (
-        <Spinner />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="mt-2 h-3 w-44" />
+              <Skeleton className="mt-5 h-9 w-full" />
+            </div>
+          ))}
+        </div>
       ) : isError ? (
         <ErrorState message={getApiErrorMessage(error)} onRetry={() => void refetch()} />
       ) : hasResults ? (
@@ -147,9 +159,21 @@ export default function RolesPage() {
           )}
         </div>
       ) : (
-        <p className="text-slate-500">
-          {search ? `"${search}" için sonuç bulunamadı.` : 'Henüz rol yok.'}
-        </p>
+        <EmptyState
+          icon={ShieldCheck}
+          title={search ? 'Sonuç bulunamadı' : 'Henüz rol yok'}
+          description={
+            search ? `"${search}" için eşleşen rol yok.` : 'İlk rolü oluşturarak başlayın.'
+          }
+          action={
+            !search && (
+              <Button onClick={openCreate}>
+                <Plus className="size-4" />
+                Yeni Rol
+              </Button>
+            )
+          }
+        />
       )}
 
       {formOpen && (
