@@ -5,6 +5,7 @@ using BaseKit.Modules.Users.Domain;
 using BaseKit.Modules.Users.Persistence;
 using BaseKit.Modules.Users.Seed;
 using BaseKit.Shared.Authorization;
+using BaseKit.Shared.Dashboard;
 using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -53,6 +54,7 @@ public sealed class UsersModule : IModule
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
         services.AddSingleton<IPermissionProvider, AdminPermissionProvider>();
+        services.AddScoped<IDashboardStatProvider, UsersStatProvider>();
 
         var jwt = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
                   ?? throw new InvalidOperationException("Jwt yapılandırması bulunamadı.");

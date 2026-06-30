@@ -1,5 +1,6 @@
 using BaseKit.Modules.Catalog.Persistence;
 using BaseKit.Shared.Authorization;
+using BaseKit.Shared.Dashboard;
 using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -22,5 +23,6 @@ public sealed class CatalogModule : IModule
                 npgsql.MigrationsHistoryTable("__ef_migrations_history", CatalogDbContext.Schema)));
 
         services.AddSingleton<IPermissionProvider, CatalogPermissionProvider>();
+        services.AddScoped<IDashboardStatProvider, CatalogStatProvider>();
     }
 }
