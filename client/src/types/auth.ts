@@ -6,12 +6,23 @@ export interface TokenResponse {
   refreshTokenExpiresAtUtc: string
 }
 
-/** /auth/me yanıtı: kimlik + roller + (anlık) yetkiler. */
+/** /auth/me yanıtı: kimlik + profil + roller + (anlık) yetkiler. */
 export interface MeResponse {
   userId: string | null
   email: string | null
+  /** Görünen ad (opsiyonel); yoksa e-posta gösterilir. */
+  displayName: string | null
+  /** Profil fotoğrafı için geçici (presigned) URL; yoksa null. */
+  avatarUrl: string | null
   roles: string[]
   permissions: string[]
+}
+
+/** Profil uçlarının ortak yanıtı. */
+export interface ProfileResponse {
+  email: string | null
+  displayName: string | null
+  avatarUrl: string | null
 }
 
 export interface LoginRequest {
