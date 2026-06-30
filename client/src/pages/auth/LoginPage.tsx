@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Form, Formik } from 'formik'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import AuthLayout from '@/components/auth/AuthLayout'
 import TextField from '@/components/ui/TextField'
 import Button from '@/components/ui/Button'
+import FormError from '@/components/ui/FormError'
 import { loginSchema } from '@/features/auth/validation'
 import { useAuth } from '@/features/auth/useAuth'
 import { getApiErrorMessage } from '@/types/api'
@@ -13,6 +15,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard'
+  const [formError, setFormError] = useState<string | null>(null)
 
   return (
     <AuthLayout
@@ -31,12 +34,13 @@ export default function LoginPage() {
         initialValues={{ email: '', password: '' }}
         validationSchema={loginSchema}
         onSubmit={async (values, { setSubmitting }) => {
+          setFormError(null)
           try {
             await login(values.email, values.password)
             toast.success('Giriş başarılı.')
             navigate(from, { replace: true })
           } catch (error) {
-            toast.error(getApiErrorMessage(error, 'E-posta veya şifre hatalı.'))
+            setFormError(getApiErrorMessage(error, 'E-posta veya şifre hatalı.'))
           } finally {
             setSubmitting(false)
           }
@@ -44,6 +48,7 @@ export default function LoginPage() {
       >
         {({ isSubmitting }) => (
           <Form className="space-y-4" noValidate>
+            <FormError message={formError} />
             <TextField
               name="email"
               label="E-posta"

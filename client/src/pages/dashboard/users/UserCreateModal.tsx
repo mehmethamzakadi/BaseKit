@@ -5,6 +5,7 @@ import TextField from '@/components/ui/TextField'
 import Spinner from '@/components/ui/Spinner'
 import { useCreateUser, useRoles } from '@/features/admin/queries'
 import { createUserSchema } from '@/features/admin/validation'
+import { getApiFieldErrors } from '@/types/api'
 
 interface Props {
   onClose: () => void
@@ -19,7 +20,7 @@ export default function UserCreateModal({ onClose }: Props) {
     <Formik
       initialValues={{ email: '', password: '', displayName: '', roles: [] as string[] }}
       validationSchema={createUserSchema}
-      onSubmit={async (values) => {
+      onSubmit={async (values, { setErrors }) => {
         try {
           await create.mutateAsync({
             email: values.email.trim(),
@@ -28,8 +29,9 @@ export default function UserCreateModal({ onClose }: Props) {
             roles: values.roles,
           })
           onClose()
-        } catch {
-          /* hata toast'lanır */
+        } catch (error) {
+          const fieldErrors = getApiFieldErrors(error)
+          if (Object.keys(fieldErrors).length > 0) setErrors(fieldErrors)
         }
       }}
     >

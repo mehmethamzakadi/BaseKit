@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button'
 import TextField from '@/components/ui/TextField'
 import { roleSchema } from '@/features/admin/validation'
 import { useCreateRole, useUpdateRole } from '@/features/admin/queries'
+import { getApiFieldErrors } from '@/types/api'
 import type { RoleDto } from '@/types/admin'
 
 interface Props {
@@ -22,7 +23,7 @@ export default function RoleFormModal({ role, onClose }: Props) {
     <Formik
       initialValues={{ name: role?.name ?? '', description: role?.description ?? '' }}
       validationSchema={roleSchema}
-      onSubmit={async (values) => {
+      onSubmit={async (values, { setErrors }) => {
         const body = {
           name: values.name.trim(),
           description: values.description.trim() || null,
@@ -34,8 +35,10 @@ export default function RoleFormModal({ role, onClose }: Props) {
             await create.mutateAsync(body)
           }
           onClose()
-        } catch {
-          // hata mutasyonda toast'lanır
+        } catch (error) {
+          // Genel hata mutasyonda toast'lanır; alan hatalarını alanlara bağla.
+          const fieldErrors = getApiFieldErrors(error)
+          if (Object.keys(fieldErrors).length > 0) setErrors(fieldErrors)
         }
       }}
     >

@@ -49,6 +49,28 @@ function extractFieldErrors(errors: ApiErrorResponse['errors']): string[] {
 }
 
 /**
+ * Sunucu doğrulama hatalarını alan adı → mesaj sözlüğüne dönüştürür. Formik
+ * `setErrors` ile alanlara bağlamak için kullanılır. Alan adları sunucu
+ * (camelCase) ile form alanlarıyla eşleşir (ör. "email", "password").
+ */
+export function getApiFieldErrors(error: unknown): Record<string, string> {
+  const result: Record<string, string> = {}
+  if (error instanceof AxiosError) {
+    const data = error.response?.data as ApiErrorResponse | undefined
+    if (Array.isArray(data?.errors)) {
+      for (const e of data.errors) {
+        if (e?.name && e?.reason && !result[e.name]) result[e.name] = e.reason
+      }
+    } else if (data?.errors) {
+      for (const [field, msgs] of Object.entries(data.errors)) {
+        if (msgs?.[0]) result[field] = msgs[0]
+      }
+    }
+  }
+  return result
+}
+
+/**
  * Bir hatadan kullanıcıya gösterilebilecek anlamlı bir mesaj çıkarır.
  * Axios/FastEndpoints (ProblemDetails veya eski) hata gövdesini güvenli ayrıştırır.
  */
