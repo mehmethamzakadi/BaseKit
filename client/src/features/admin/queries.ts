@@ -10,6 +10,15 @@ export const adminKeys = {
   permissions: ['admin', 'permissions'] as const,
   usersList: (params: PagedQuery) => ['admin', 'users', 'list', params] as const,
   rolesList: (params: PagedQuery) => ['admin', 'roles', 'list', params] as const,
+  auditList: (params: PagedQuery) => ['admin', 'audit', 'list', params] as const,
+}
+
+export function useAuditLogs(params: PagedQuery) {
+  return useQuery({
+    queryKey: adminKeys.auditList(params),
+    queryFn: () => adminApi.listAuditLogs(params),
+    placeholderData: keepPreviousData,
+  })
 }
 
 // --- Sorgular ---

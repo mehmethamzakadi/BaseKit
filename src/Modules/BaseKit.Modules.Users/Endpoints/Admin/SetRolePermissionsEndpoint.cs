@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Audit;
 using BaseKit.Shared.Authorization;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
@@ -19,7 +20,8 @@ public sealed class SetRolePermissionsRequest
 public sealed class SetRolePermissionsEndpoint(
     RoleManager<AppRole> roleManager,
     IPermissionService permissionService,
-    IEnumerable<IPermissionProvider> providers)
+    IEnumerable<IPermissionProvider> providers,
+    IAuditLogger audit)
     : Endpoint<SetRolePermissionsRequest, RoleDto>
 {
     public override void Configure()
@@ -51,6 +53,10 @@ public sealed class SetRolePermissionsEndpoint(
         }
 
         await permissionService.SetRolePermissionsAsync(role.Id, req.Permissions, ct);
+
+        await audit.LogAsync(
+            "role.set_permissions", "Role", role.Id.ToString(),
+            $"{role.Name}: {req.Permissions.Count} yetki", ct);
 
         await Send.OkAsync(new RoleDto(role.Id, role.Name!, role.Description, req.Permissions), ct);
     }

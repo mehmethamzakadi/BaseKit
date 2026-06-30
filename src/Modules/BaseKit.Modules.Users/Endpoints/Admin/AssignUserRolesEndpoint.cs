@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Audit;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 
@@ -13,7 +14,7 @@ public sealed class AssignUserRolesRequest
 
 /// <summary>Kullanıcının rollerini verilen kümeyle eşitler.</summary>
 public sealed class AssignUserRolesEndpoint(
-    UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
+    UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IAuditLogger audit)
     : Endpoint<AssignUserRolesRequest, UserDto>
 {
     public override void Configure()
@@ -62,6 +63,10 @@ public sealed class AssignUserRolesEndpoint(
         {
             await userManager.AddToRolesAsync(user, toAdd);
         }
+
+        await audit.LogAsync(
+            "user.assign_roles", "User", user.Id.ToString(),
+            $"{user.Email}: {string.Join(", ", desired)}", ct);
 
         var isActive = user.LockoutEnd is null || user.LockoutEnd <= DateTimeOffset.UtcNow;
         await Send.OkAsync(new UserDto(user.Id, user.Email, user.DisplayName, desired, isActive), ct);

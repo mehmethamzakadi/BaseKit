@@ -3,6 +3,7 @@ import {
   Package,
   Users,
   ShieldCheck,
+  ScrollText,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -42,6 +43,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: 'Kullanıcılar', to: '/dashboard/users', icon: Users, permission: 'admin.users.manage' },
       { label: 'Roller & Yetkiler', to: '/dashboard/roles', icon: ShieldCheck, permission: 'admin.roles.manage' },
+      { label: 'Denetim Kayıtları', to: '/dashboard/audit', icon: ScrollText, permission: 'admin.audit.view' },
     ],
   },
 ]

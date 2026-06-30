@@ -1,6 +1,7 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
 using BaseKit.Modules.Users.Endpoints.Profile;
+using BaseKit.Shared.Audit;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 
@@ -16,7 +17,7 @@ public sealed class SetUserActiveRequest
 /// Kullanıcıyı aktif/pasif yapar. Pasif kullanıcı (LockoutEnd sonsuz) giriş
 /// yapamaz. Yönetici kendini pasifleştiremez.
 /// </summary>
-public sealed class SetUserActiveEndpoint(UserManager<AppUser> userManager)
+public sealed class SetUserActiveEndpoint(UserManager<AppUser> userManager, IAuditLogger audit)
     : Endpoint<SetUserActiveRequest, UserDto>
 {
     public override void Configure()
@@ -48,6 +49,9 @@ public sealed class SetUserActiveEndpoint(UserManager<AppUser> userManager)
         {
             await userManager.ResetAccessFailedCountAsync(user);
         }
+
+        await audit.LogAsync(
+            req.Active ? "user.activate" : "user.deactivate", "User", user.Id.ToString(), user.Email, ct);
 
         var roles = await userManager.GetRolesAsync(user);
         await Send.OkAsync(

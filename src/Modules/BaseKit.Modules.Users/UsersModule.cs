@@ -4,6 +4,8 @@ using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
 using BaseKit.Modules.Users.Persistence;
 using BaseKit.Modules.Users.Seed;
+using BaseKit.Modules.Users.Audit;
+using BaseKit.Shared.Audit;
 using BaseKit.Shared.Authorization;
 using BaseKit.Shared.Dashboard;
 using BaseKit.Shared.Modules;
@@ -55,6 +57,10 @@ public sealed class UsersModule : IModule
         services.AddScoped<IClaimsTransformation, PermissionClaimsTransformation>();
         services.AddSingleton<IPermissionProvider, AdminPermissionProvider>();
         services.AddScoped<IDashboardStatProvider, UsersStatProvider>();
+
+        // Denetim kaydı (audit) — geçerli kullanıcı/IP için HttpContext erişimi.
+        services.AddHttpContextAccessor();
+        services.AddScoped<IAuditLogger, AuditLogger>();
 
         var jwt = configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
                   ?? throw new InvalidOperationException("Jwt yapılandırması bulunamadı.");

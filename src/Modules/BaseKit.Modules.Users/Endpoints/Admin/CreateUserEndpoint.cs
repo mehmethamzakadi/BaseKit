@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Audit;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +12,7 @@ public sealed record CreateUserRequest(
 
 /// <summary>Admin tarafından yeni kullanıcı oluşturur (rolleriyle birlikte).</summary>
 public sealed class CreateUserEndpoint(
-    UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
+    UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IAuditLogger audit)
     : Endpoint<CreateUserRequest, UserDto>
 {
     public override void Configure()
@@ -63,6 +64,8 @@ public sealed class CreateUserEndpoint(
         {
             await userManager.AddToRolesAsync(user, desiredRoles);
         }
+
+        await audit.LogAsync("user.create", "User", user.Id.ToString(), user.Email, ct);
 
         await Send.OkAsync(
             new UserDto(user.Id, user.Email, user.DisplayName, desiredRoles, IsActive: true), ct);

@@ -15,6 +15,7 @@ public sealed class UsersDbContext(DbContextOptions<UsersDbContext> options)
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

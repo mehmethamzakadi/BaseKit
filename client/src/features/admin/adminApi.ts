@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/apiClient'
 import type { PagedQuery, PagedResult } from '@/types/api'
 import type { PermissionGroupDto, RoleDto, UserDto } from '@/types/admin'
+import type { AuditLogDto } from '@/types/audit'
 
 /** Yönetim (RBAC) uç noktalarının tiplenmiş sarmalayıcıları. */
 export const adminApi = {
@@ -50,4 +51,8 @@ export const adminApi = {
   // --- Yetki kataloğu ---
   listPermissions: () =>
     apiClient.get<PermissionGroupDto[]>('/admin/permissions').then((r) => r.data),
+
+  // --- Denetim kayıtları ---
+  listAuditLogs: (params: PagedQuery = {}) =>
+    apiClient.get<PagedResult<AuditLogDto>>('/admin/audit-logs', { params }).then((r) => r.data),
 }

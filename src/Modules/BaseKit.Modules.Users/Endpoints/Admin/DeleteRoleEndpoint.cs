@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Audit;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 
@@ -9,7 +10,7 @@ public sealed record DeleteRoleRequest(Guid Id);
 
 /// <summary>Rolü siler (yetkileri cascade ile temizlenir).</summary>
 public sealed class DeleteRoleEndpoint(
-    RoleManager<AppRole> roleManager, IPermissionService permissionService)
+    RoleManager<AppRole> roleManager, IPermissionService permissionService, IAuditLogger audit)
     : Endpoint<DeleteRoleRequest>
 {
     public override void Configure()
@@ -40,6 +41,7 @@ public sealed class DeleteRoleEndpoint(
         }
 
         await permissionService.InvalidateRoleAsync(role.Id, ct);
+        await audit.LogAsync("role.delete", "Role", req.Id.ToString(), role.Name, ct);
         await Send.NoContentAsync(ct);
     }
 }

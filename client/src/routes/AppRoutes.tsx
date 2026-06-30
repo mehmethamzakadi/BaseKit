@@ -11,6 +11,7 @@ import ProductsPage from '@/pages/dashboard/products/ProductsPage'
 import ProfilePage from '@/pages/dashboard/profile/ProfilePage'
 import UsersPage from '@/pages/dashboard/users/UsersPage'
 import RolesPage from '@/pages/dashboard/roles/RolesPage'
+import AuditLogsPage from '@/pages/dashboard/audit/AuditLogsPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
 import NotFoundPage from '@/pages/NotFoundPage'
 
@@ -47,6 +48,9 @@ export default function AppRoutes() {
           </Route>
           <Route element={<ProtectedRoute permission="admin.roles.manage" />}>
             <Route path="roles" element={<RolesPage />} />
+          </Route>
+          <Route element={<ProtectedRoute permission="admin.audit.view" />}>
+            <Route path="audit" element={<AuditLogsPage />} />
           </Route>
         </Route>
       </Route>

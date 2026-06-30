@@ -1,5 +1,6 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Audit;
 using FastEndpoints;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -15,7 +16,7 @@ public sealed class AdminResetPasswordRequest
 public sealed record AdminResetPasswordResponse(string Message);
 
 /// <summary>Yönetici, kullanıcının şifresini doğrudan sıfırlar (mevcut şifre gerekmez).</summary>
-public sealed class AdminResetPasswordEndpoint(UserManager<AppUser> userManager)
+public sealed class AdminResetPasswordEndpoint(UserManager<AppUser> userManager, IAuditLogger audit)
     : Endpoint<AdminResetPasswordRequest, AdminResetPasswordResponse>
 {
     public override void Configure()
@@ -41,6 +42,8 @@ public sealed class AdminResetPasswordEndpoint(UserManager<AppUser> userManager)
             await Send.ErrorsAsync(400, ct);
             return;
         }
+
+        await audit.LogAsync("user.reset_password", "User", user.Id.ToString(), user.Email, ct);
 
         await Send.OkAsync(new AdminResetPasswordResponse("Kullanıcının şifresi güncellendi."), ct);
     }
