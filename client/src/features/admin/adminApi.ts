@@ -8,6 +8,24 @@ export const adminApi = {
   listUsers: (params: PagedQuery = {}) =>
     apiClient.get<PagedResult<UserDto>>('/admin/users', { params }).then((r) => r.data),
 
+  createUser: (body: {
+    email: string
+    password: string
+    displayName?: string | null
+    roles?: string[]
+  }) => apiClient.post<UserDto>('/admin/users', body).then((r) => r.data),
+
+  deleteUser: (id: string) =>
+    apiClient.delete<void>(`/admin/users/${id}`).then((r) => r.data),
+
+  setUserActive: (id: string, active: boolean) =>
+    apiClient.put<UserDto>(`/admin/users/${id}/active`, { active }).then((r) => r.data),
+
+  adminResetPassword: (id: string, newPassword: string) =>
+    apiClient
+      .post<{ message: string }>(`/admin/users/${id}/reset-password`, { newPassword })
+      .then((r) => r.data),
+
   assignUserRoles: (id: string, roles: string[]) =>
     apiClient.put<UserDto>(`/admin/users/${id}/roles`, { roles }).then((r) => r.data),
 

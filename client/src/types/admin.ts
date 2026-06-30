@@ -2,7 +2,9 @@
 export interface UserDto {
   id: string
   email: string | null
+  displayName: string | null
   roles: string[]
+  isActive: boolean
 }
 
 /** /admin/roles öğesi. */

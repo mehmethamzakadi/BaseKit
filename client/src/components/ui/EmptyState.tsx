@@ -1,0 +1,29 @@
+import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+
+interface EmptyStateProps {
+  icon: LucideIcon
+  title: string
+  description?: string
+  /** İsteğe bağlı eylem (ör. "Yeni Ekle" butonu). */
+  action?: ReactNode
+}
+
+/**
+ * Boş durum gösterimi: ikon + başlık + açıklama + isteğe bağlı eylem. Liste
+ * sayfalarında "veri yok" / "sonuç bulunamadı" durumları için kullanılır.
+ */
+export default function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-slate-700 dark:bg-slate-900">
+      <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+        <Icon className="size-6" />
+      </span>
+      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      {description && (
+        <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">{description}</p>
+      )}
+      {action && <div className="mt-5">{action}</div>}
+    </div>
+  )
+}

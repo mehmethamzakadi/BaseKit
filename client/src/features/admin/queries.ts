@@ -47,6 +47,53 @@ export function useAssignUserRoles() {
   })
 }
 
+export function useCreateUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { email: string; password: string; displayName?: string | null; roles?: string[] }) =>
+      adminApi.createUser(body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: adminKeys.users })
+      toast.success('Kullanıcı oluşturuldu.')
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => adminApi.deleteUser(id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: adminKeys.users })
+      toast.success('Kullanıcı silindi.')
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
+export function useSetUserActive() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      adminApi.setUserActive(id, active),
+    onSuccess: (_data, { active }) => {
+      void qc.invalidateQueries({ queryKey: adminKeys.users })
+      toast.success(active ? 'Kullanıcı aktifleştirildi.' : 'Kullanıcı pasifleştirildi.')
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
+export function useAdminResetPassword() {
+  return useMutation({
+    mutationFn: ({ id, newPassword }: { id: string; newPassword: string }) =>
+      adminApi.adminResetPassword(id, newPassword),
+    onSuccess: () => toast.success('Kullanıcının şifresi güncellendi.'),
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
 export function useCreateRole() {
   const qc = useQueryClient()
   return useMutation({

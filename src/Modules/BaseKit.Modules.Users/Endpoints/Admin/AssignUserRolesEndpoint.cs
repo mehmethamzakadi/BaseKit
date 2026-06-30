@@ -63,6 +63,7 @@ public sealed class AssignUserRolesEndpoint(
             await userManager.AddToRolesAsync(user, toAdd);
         }
 
-        await Send.OkAsync(new UserDto(user.Id, user.Email, desired), ct);
+        var isActive = user.LockoutEnd is null || user.LockoutEnd <= DateTimeOffset.UtcNow;
+        await Send.OkAsync(new UserDto(user.Id, user.Email, user.DisplayName, desired, isActive), ct);
     }
 }
