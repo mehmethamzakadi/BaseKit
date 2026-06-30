@@ -7,6 +7,7 @@ using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
 using BaseKit.Shared.Storage;
 using FastEndpoints;
+using FastEndpoints.Swagger;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,19 @@ var moduleAssemblies = new[]
 
 builder.Services.AddModules(builder.Configuration, moduleAssemblies);
 builder.Services.AddFastEndpoints(options => options.Assemblies = moduleAssemblies);
+
+// API dokümantasyonu: FastEndpoints + NSwag. Swagger UI /swagger adresinde sunulur.
+// JWT bearer auth tanımı eklenir; UI'dan "Authorize" ile token girilebilir.
+builder.Services.SwaggerDocument(o =>
+{
+    o.EnableJWTBearerAuth = true;
+    o.DocumentSettings = s =>
+    {
+        s.Title = "BaseKit API";
+        s.Version = "v1";
+        s.Description = "Modüler monolit starter — REPR endpoint'leri, RBAC, JWT.";
+    };
+});
 
 // Cross-cutting altyapı: Redis dağıtık cache + MinIO nesne deposu.
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -79,6 +93,13 @@ app.UseAuthorization();
 
 app.UseFastEndpoints(config =>
     config.Security.PermissionsClaimType = PermissionClaimsTransformation.PermissionClaimType);
+
+// Swagger UI'ı yalnızca Development'ta aç (üretimde kapalı kalsın).
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+}
+
 app.MapHealthChecks("/health");
 
 app.Run();
