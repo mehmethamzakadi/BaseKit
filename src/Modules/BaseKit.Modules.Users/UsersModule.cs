@@ -35,6 +35,11 @@ public sealed class UsersModule : IModule
             {
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = true;
+
+                // Hesap kilitleme: 5 başarısız denemeden sonra 5 dakika kilit.
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             })
             .AddRoles<AppRole>()
             .AddEntityFrameworkStores<UsersDbContext>()

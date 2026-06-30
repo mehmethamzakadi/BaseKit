@@ -18,6 +18,7 @@ public sealed class RegisterEndpoint(UserManager<AppUser> userManager, IPublishE
     {
         Post("/auth/register");
         AllowAnonymous();
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)

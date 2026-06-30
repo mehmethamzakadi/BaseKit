@@ -18,16 +18,35 @@ public sealed class LoginEndpoint(
     {
         Post("/auth/login");
         AllowAnonymous();
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
         var user = await userManager.FindByEmailAsync(req.Email);
-        if (user is null || !await userManager.CheckPasswordAsync(user, req.Password))
+        if (user is null)
         {
             await Send.UnauthorizedAsync(ct);
             return;
         }
+
+        // Hesap kilitliyse (çok sayıda başarısız deneme) girişi reddet.
+        if (await userManager.IsLockedOutAsync(user))
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
+        if (!await userManager.CheckPasswordAsync(user, req.Password))
+        {
+            // Başarısız deneme sayacını artır; eşiğe ulaşınca hesap kilitlenir.
+            await userManager.AccessFailedAsync(user);
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
+        // Başarılı giriş: başarısız deneme sayacını sıfırla.
+        await userManager.ResetAccessFailedCountAsync(user);
 
         var roles = await userManager.GetRolesAsync(user);
         var access = tokenService.CreateAccessToken(user, roles);

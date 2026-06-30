@@ -12,6 +12,11 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- RequireRateLimiting (endpoint convention) kimlik endpoint'lerinde kullanılır. -->
+    <Using Include="Microsoft.AspNetCore.Builder" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

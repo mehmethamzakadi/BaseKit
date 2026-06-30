@@ -29,6 +29,7 @@ public sealed class ChangePasswordEndpoint(
     public override void Configure()
     {
         Post("/profile/change-password");
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(ChangePasswordRequest req, CancellationToken ct)

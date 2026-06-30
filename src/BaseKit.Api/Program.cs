@@ -5,10 +5,12 @@ using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Seed;
 using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
+using System.Threading.RateLimiting;
 using BaseKit.Shared.Storage;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using MassTransit;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +31,22 @@ builder.Services.AddFastEndpoints(options => options.Assemblies = moduleAssembli
 
 // İşlenmeyen istisnalar için RFC7807 ProblemDetails üretimi (UseExceptionHandler ile).
 builder.Services.AddProblemDetails();
+
+// Rate limiting: kimlik uçlarında (login/register/forgot/reset) IP başına sabit
+// pencere — brute-force ve kötüye kullanımı sınırlar. Aşımda 429 döner.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
 
 // API dokümantasyonu: FastEndpoints + NSwag. Swagger UI /swagger adresinde sunulur.
 // JWT bearer auth tanımı eklenir; UI'dan "Authorize" ile token girilebilir.
@@ -94,6 +112,8 @@ await UsersSeeder.SeedAsync(app.Services);
 app.UseExceptionHandler();
 
 app.UseCors("spa");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

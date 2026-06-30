@@ -23,6 +23,7 @@ public sealed class RefreshEndpoint(
     {
         Post("/auth/refresh");
         AllowAnonymous();
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(RefreshRequest req, CancellationToken ct)

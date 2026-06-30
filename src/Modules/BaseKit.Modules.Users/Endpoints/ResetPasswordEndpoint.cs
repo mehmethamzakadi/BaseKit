@@ -19,6 +19,7 @@ public sealed class ResetPasswordEndpoint(UserManager<AppUser> userManager)
     {
         Post("/auth/reset-password");
         AllowAnonymous();
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct)

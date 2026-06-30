@@ -28,6 +28,7 @@ public sealed class ForgotPasswordEndpoint(
     {
         Post("/auth/forgot-password");
         AllowAnonymous();
+        Options(x => x.RequireRateLimiting("auth"));
     }
 
     public override async Task HandleAsync(ForgotPasswordRequest req, CancellationToken ct)
