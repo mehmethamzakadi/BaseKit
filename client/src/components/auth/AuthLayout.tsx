@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 
 interface AuthLayoutProps {
   title: string
@@ -10,12 +11,13 @@ interface AuthLayoutProps {
 
 /** Kimlik doğrulama sayfaları için ortak kart düzeni. */
 export default function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
+  const { siteName } = usePublicSettings()
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
           <Link to="/" className="text-2xl font-bold text-brand-700 dark:text-brand-400">
-            BaseKit
+            {siteName}
           </Link>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">

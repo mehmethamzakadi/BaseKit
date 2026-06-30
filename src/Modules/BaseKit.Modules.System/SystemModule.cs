@@ -1,5 +1,8 @@
 using BaseKit.Modules.System.Persistence;
+using BaseKit.Modules.System.Settings;
+using BaseKit.Shared.Authorization;
 using BaseKit.Shared.Modules;
+using BaseKit.Shared.Settings;
 using BaseKit.Shared.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +24,11 @@ public sealed class SystemModule : IModule
         services.AddModuleDbContext<SystemDbContext>(options =>
             options.UseNpgsql(connectionString, npgsql =>
                 npgsql.MigrationsHistoryTable("__ef_migrations_history", SystemDbContext.Schema)));
+
+        services.AddScoped<SystemSettingsService>();
+        services.AddScoped<ISystemSettingsService>(sp => sp.GetRequiredService<SystemSettingsService>());
+        services.AddScoped<ISystemSettingsReader>(sp => sp.GetRequiredService<SystemSettingsService>());
+        services.AddSingleton<IPermissionProvider, SystemPermissionProvider>();
     }
 }
 

@@ -1,6 +1,7 @@
 using BaseKit.Modules.Users.Domain;
 using BaseKit.Modules.Users.Seed;
 using BaseKit.Shared.Messaging;
+using BaseKit.Shared.Settings;
 using FastEndpoints;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
@@ -11,7 +12,10 @@ public sealed record RegisterRequest(string Email, string Password);
 
 public sealed record RegisterResponse(Guid Id, string Email);
 
-public sealed class RegisterEndpoint(UserManager<AppUser> userManager, IPublishEndpoint publishEndpoint)
+public sealed class RegisterEndpoint(
+    UserManager<AppUser> userManager,
+    IPublishEndpoint publishEndpoint,
+    ISystemSettingsReader settings)
     : Endpoint<RegisterRequest, RegisterResponse>
 {
     public override void Configure()
@@ -23,6 +27,14 @@ public sealed class RegisterEndpoint(UserManager<AppUser> userManager, IPublishE
 
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
     {
+        // Sistem ayarı: kayıt kapalıysa yeni hesap oluşturmaya izin verme.
+        if (!await settings.GetBoolAsync(SettingKeys.RegistrationEnabled, true, ct))
+        {
+            AddError("Yeni kullanıcı kaydı şu anda kapalıdır.");
+            await Send.ErrorsAsync(403, ct);
+            return;
+        }
+
         var user = new AppUser { Id = Guid.NewGuid(), UserName = req.Email, Email = req.Email };
         var result = await userManager.CreateAsync(user, req.Password);
 

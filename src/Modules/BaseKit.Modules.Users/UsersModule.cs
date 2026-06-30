@@ -8,6 +8,7 @@ using BaseKit.Modules.Users.Audit;
 using BaseKit.Shared.Audit;
 using BaseKit.Shared.Authorization;
 using BaseKit.Shared.Dashboard;
+using BaseKit.Shared.Identity;
 using BaseKit.Shared.Modules;
 using BaseKit.Shared.Persistence;
 using Microsoft.AspNetCore.Authentication;
@@ -58,6 +59,9 @@ public sealed class UsersModule : IModule
         services.AddSingleton<IPermissionProvider, AdminPermissionProvider>();
         services.AddScoped<IDashboardStatProvider, UsersStatProvider>();
 
+        // Modüller arası kullanıcı dizini (ör. Notifications duyuru gönderirken).
+        services.AddScoped<IUserDirectory, UserDirectory>();
+
         // Denetim kaydı (audit) — geçerli kullanıcı/IP için HttpContext erişimi.
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditLogger, AuditLogger>();
@@ -79,6 +83,22 @@ public sealed class UsersModule : IModule
                     ValidAudience = jwt.Audience,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
                     ClockSkew = TimeSpan.FromSeconds(30),
+                };
+
+                // SignalR WebSocket'lerinde tarayıcı Authorization başlığı gönderemez;
+                // token'ı query string'den (?access_token=...) okuyup /hubs uçlarında kabul et.
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    },
                 };
             });
 

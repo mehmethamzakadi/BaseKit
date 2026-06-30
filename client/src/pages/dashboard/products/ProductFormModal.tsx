@@ -89,7 +89,7 @@ export default function ProductFormModal({ product, onClose }: Props) {
           </Form>
 
           <div className="mt-5 border-t border-slate-200 pt-4">
-            <p className="mb-2 text-sm font-medium text-slate-700">Ürün görseli</p>
+            <p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Ürün görseli</p>
             {isEdit ? (
               <PermissionGate
                 permission="catalog.products.update"

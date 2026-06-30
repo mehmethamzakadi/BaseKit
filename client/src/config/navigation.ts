@@ -4,6 +4,8 @@ import {
   Users,
   ShieldCheck,
   ScrollText,
+  Settings,
+  Bell,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -30,6 +32,7 @@ export const navGroups: NavGroup[] = [
   {
     items: [
       { label: 'Kontrol Paneli', to: '/dashboard', icon: LayoutDashboard, end: true },
+      { label: 'Bildirimler', to: '/dashboard/notifications', icon: Bell },
     ],
   },
   {
@@ -44,6 +47,7 @@ export const navGroups: NavGroup[] = [
       { label: 'Kullanıcılar', to: '/dashboard/users', icon: Users, permission: 'admin.users.manage' },
       { label: 'Roller & Yetkiler', to: '/dashboard/roles', icon: ShieldCheck, permission: 'admin.roles.manage' },
       { label: 'Denetim Kayıtları', to: '/dashboard/audit', icon: ScrollText, permission: 'admin.audit.view' },
+      { label: 'Sistem Ayarları', to: '/dashboard/settings', icon: Settings, permission: 'system.settings.view' },
     ],
   },
 ]

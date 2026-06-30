@@ -1,4 +1,6 @@
 using BaseKit.Modules.Catalog;
+using BaseKit.Modules.Notifications;
+using BaseKit.Modules.Notifications.Realtime;
 using BaseKit.Modules.System;
 using BaseKit.Modules.Users;
 using BaseKit.Modules.Users.Authorization;
@@ -33,6 +35,7 @@ var moduleAssemblies = new[]
     typeof(SystemModule).Assembly,
     typeof(UsersModule).Assembly,
     typeof(CatalogModule).Assembly,
+    typeof(NotificationsModule).Assembly,
     // >>> SCAFFOLD:MODULES <<< (bu satırı silmeyin; new-module.ps1 buraya ekler)
 };
 
@@ -109,7 +112,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("spa", policy =>
         policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              // SignalR tarayıcı istemcisi için kimlik bilgisi taşınmasına izin ver.
+              .AllowCredentials());
 });
 
 var app = builder.Build();
@@ -146,5 +151,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/health");
+
+// Bildirimler için gerçek zamanlı SignalR hub'ı (JWT ile korunur).
+app.MapHub<NotificationsHub>("/hubs/notifications");
 
 app.Run();

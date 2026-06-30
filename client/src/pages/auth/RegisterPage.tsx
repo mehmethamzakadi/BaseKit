@@ -9,12 +9,36 @@ import FormError from '@/components/ui/FormError'
 import { registerSchema } from '@/features/auth/validation'
 import { authApi } from '@/features/auth/authApi'
 import { useAuth } from '@/features/auth/useAuth'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 import { getApiErrorMessage, getApiFieldErrors } from '@/types/api'
 
 export default function RegisterPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const { registrationEnabled } = usePublicSettings()
   const [formError, setFormError] = useState<string | null>(null)
+
+  if (!registrationEnabled) {
+    return (
+      <AuthLayout
+        title="Kayıt Kapalı"
+        subtitle="Yeni kullanıcı kaydı şu anda devre dışı"
+        footer={
+          <>
+            Zaten hesabınız var mı?{' '}
+            <Link to="/login" className="font-medium text-brand-600 hover:underline">
+              Giriş yapın
+            </Link>
+          </>
+        }
+      >
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          Yönetici yeni kayıtları geçici olarak kapatmıştır. Lütfen daha sonra tekrar deneyin
+          veya bir yöneticiyle iletişime geçin.
+        </p>
+      </AuthLayout>
+    )
+  }
 
   return (
     <AuthLayout

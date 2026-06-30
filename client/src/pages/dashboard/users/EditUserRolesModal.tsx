@@ -68,7 +68,7 @@ export default function EditUserRolesModal({ user, onClose }: Props) {
                 className="mt-0.5 size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
               />
               <div>
-                <p className="text-sm font-medium text-slate-800">{role.name}</p>
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{role.name}</p>
                 {role.description && (
                   <p className="text-xs text-slate-500">{role.description}</p>
                 )}

@@ -34,8 +34,8 @@ export default function Pagination({
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
       <div className="flex flex-wrap items-center gap-4">
         <span>
-          <span className="font-medium text-slate-800">{from}</span>–
-          <span className="font-medium text-slate-800">{to}</span> / {totalCount} kayıt
+          <span className="font-medium text-slate-800 dark:text-slate-200">{from}</span>–
+          <span className="font-medium text-slate-800 dark:text-slate-200">{to}</span> / {totalCount} kayıt
         </span>
         {showSizeSelector && (
           <label className="flex items-center gap-2 text-slate-500">
