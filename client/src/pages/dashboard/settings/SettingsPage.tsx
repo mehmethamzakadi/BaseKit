@@ -5,6 +5,7 @@ import ErrorState from '@/components/ui/ErrorState'
 import Skeleton from '@/components/ui/Skeleton'
 import { useSettings, useUpdateSettings } from '@/features/settings/queries'
 import { useAuth } from '@/features/auth/useAuth'
+import { useUnsavedChangesPrompt } from '@/lib/useUnsavedChangesPrompt'
 import { getApiErrorMessage } from '@/types/api'
 import type { SettingItem } from '@/types/settings'
 
@@ -35,6 +36,9 @@ export default function SettingsPage() {
     () => Object.keys(serverValues).some((k) => values[k] !== serverValues[k]),
     [values, serverValues],
   )
+
+  // Kaydedilmemiş değişiklik varken sekme kapatma/yenileme öncesi uyar.
+  useUnsavedChangesPrompt(isDirty)
 
   const setValue = (key: string, value: string) =>
     setValues((prev) => ({ ...prev, [key]: value }))

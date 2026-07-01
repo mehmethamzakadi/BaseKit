@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import toast from 'react-hot-toast'
 import { authApi } from './authApi'
 import { tokenStorage } from './tokenStorage'
 import { AuthContext, type AuthContextValue, type AuthStatus } from './authContext'
@@ -9,6 +10,10 @@ import type { MeResponse } from '@/types/auth'
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MeResponse | null>(null)
   const [status, setStatus] = useState<AuthStatus>('loading')
+
+  // 401 kancasının, kapanış sırasında güncel durumu okuyabilmesi için ref.
+  const statusRef = useRef<AuthStatus>(status)
+  statusRef.current = status
 
   const applyLoggedOut = useCallback(() => {
     tokenStorage.clear()
@@ -46,9 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applyLoggedOut])
 
-  // axios 401 → refresh başarısız olduğunda oturumu düşür.
+  // axios 401 → refresh başarısız olduğunda oturumu düşür. Bu, kullanıcının
+  // etkin oturumu beklenmedik şekilde sonlandığında olur; sessizce atmak yerine
+  // bilgilendir (ProtectedRoute otomatik olarak /login'e yönlendirir).
   useEffect(() => {
-    setOnUnauthorized(applyLoggedOut)
+    const handleUnauthorized = () => {
+      // Yalnızca etkin bir oturum düştüyse uyar (hiç giriş yapılmamışsa değil).
+      if (statusRef.current === 'authenticated') {
+        toast.error('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.', { id: 'session-expired' })
+      }
+      applyLoggedOut()
+    }
+    setOnUnauthorized(handleUnauthorized)
     return () => setOnUnauthorized(null)
   }, [applyLoggedOut])
 

@@ -1,4 +1,5 @@
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Shared.Persistence;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,10 +18,19 @@ public sealed class UsersDbContext(DbContextOptions<UsersDbContext> options)
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        // Identity'nin UserManager/RoleManager.DeleteAsync izlemeli silmelerini
+        // soft-delete'e çevirir.
+        optionsBuilder.AddInterceptors(SoftDeleteInterceptor.Instance);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UsersDbContext).Assembly);
+        modelBuilder.ApplySoftDeleteQueryFilters();
     }
 }

@@ -1,5 +1,4 @@
 using BaseKit.Modules.Catalog.Persistence;
-using BaseKit.Shared.Storage;
 using FastEndpoints;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -8,8 +7,11 @@ namespace BaseKit.Modules.Catalog.Endpoints;
 
 public sealed record DeleteProductRequest(Guid Id);
 
-/// <summary>Ürünü siler ve varsa görselini nesne deposundan temizler.</summary>
-public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache cache, IFileStorage storage)
+/// <summary>
+/// Ürünü mantıksal olarak siler (soft-delete: <c>IsDeleted = true</c>). Kayıt ve
+/// görseli korunur; global sorgu filtresi ürünü listelerden gizler.
+/// </summary>
+public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache cache)
     : Endpoint<DeleteProductRequest>
 {
     public override void Configure()
@@ -20,25 +22,20 @@ public sealed class DeleteProductEndpoint(CatalogDbContext db, IDistributedCache
 
     public override async Task HandleAsync(DeleteProductRequest req, CancellationToken ct)
     {
-        // Görsel anahtarını silmeden önce al (orphan temizliği için).
-        var imageKey = await db.Products
+        // Sorgu filtresi zaten silinmiş kayıtları dışladığından, tekrar silme
+        // denemeleri 0 satır etkiler → NotFound.
+        var updated = await db.Products
             .Where(x => x.Id == req.Id)
-            .Select(x => x.ImageObjectKey)
-            .FirstOrDefaultAsync(ct);
+            .ExecuteUpdateAsync(
+                s => s
+                    .SetProperty(x => x.IsDeleted, true)
+                    .SetProperty(x => x.DeletedAtUtc, DateTimeOffset.UtcNow),
+                ct);
 
-        var deleted = await db.Products
-            .Where(x => x.Id == req.Id)
-            .ExecuteDeleteAsync(ct);
-
-        if (deleted == 0)
+        if (updated == 0)
         {
             await Send.NotFoundAsync(ct);
             return;
-        }
-
-        if (!string.IsNullOrEmpty(imageKey))
-        {
-            await storage.DeleteAsync(imageKey, ct);
         }
 
         await cache.RemoveAsync(CatalogCacheKeys.Product(req.Id), ct);

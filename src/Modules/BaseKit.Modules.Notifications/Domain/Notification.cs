@@ -1,10 +1,12 @@
+using BaseKit.Shared.Persistence;
+
 namespace BaseKit.Modules.Notifications.Domain;
 
 /// <summary>
 /// Tek bir kullanıcıya ait bildirim. Okundu/okunmadı durumu ve isteğe bağlı
 /// bir yönlendirme bağlantısı (link) taşır.
 /// </summary>
-public sealed class Notification
+public sealed class Notification : ISoftDeletable
 {
     public Guid Id { get; set; }
 
@@ -23,4 +25,7 @@ public sealed class Notification
     public bool IsRead { get; set; }
     public DateTimeOffset CreatedAtUtc { get; set; }
     public DateTimeOffset? ReadAtUtc { get; set; }
+
+    public bool IsDeleted { get; set; }
+    public DateTimeOffset? DeletedAtUtc { get; set; }
 }
