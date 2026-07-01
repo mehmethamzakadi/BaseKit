@@ -1,4 +1,5 @@
 using BaseKit.Modules.Catalog;
+using BaseKit.Modules.Insights;
 using BaseKit.Modules.Notifications;
 using BaseKit.Modules.Notifications.Realtime;
 using BaseKit.Modules.System;
@@ -15,8 +16,22 @@ using FastEndpoints.Swagger;
 using MassTransit;
 using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
+using System.Globalization;
+
+// Sunucu kültürünü sabitle (InvariantCulture). Aksi halde makinenin bölgesel
+// ayarına (ör. tr-TR) göre sayı ayrıştırma/biçimlendirme değişir; örneğin query
+// string'deki "lat=39.9" noktayı binlik ayırıcı sanıp 399'a dönüşür ve dış API
+// çağrıları bozulur. API'ler için invariant kültür güvenli varsayılandır.
+CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Gizli anahtarlar (dış API'ler) için yerel, git'e gönderilmeyen yapılandırma.
+// Desen .gitignore'da "appsettings.*.local.json" olarak zaten hariç tutulmuştur.
+builder.Configuration.AddJsonFile("appsettings.Development.local.json", optional: true, reloadOnChange: true);
 
 // Yapılandırılmış loglama: Serilog. Yapılandırma appsettings'ten okunur;
 // LogContext zenginleştirmesi ile her log satırı request bağlamını taşır.
@@ -36,6 +51,7 @@ var moduleAssemblies = new[]
     typeof(UsersModule).Assembly,
     typeof(CatalogModule).Assembly,
     typeof(NotificationsModule).Assembly,
+    typeof(InsightsModule).Assembly,
     // >>> SCAFFOLD:MODULES <<< (bu satırı silmeyin; new-module.ps1 buraya ekler)
 };
 

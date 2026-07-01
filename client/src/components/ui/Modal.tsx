@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
 
@@ -10,16 +10,61 @@ interface ModalProps {
   footer?: ReactNode
 }
 
-/** Erişilebilir, ESC ve arka plan tıklamasıyla kapanan modal. */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Erişilebilir modal: ESC ve arka plan tıklamasıyla kapanır, açılışta odağı içeri
+ * alır, Tab ile odak diyalog içinde döner (focus-trap), kapanışta odağı tetikleyen
+ * öğeye geri verir ve açıkken sayfa kaydırmasını kilitler.
+ */
 export default function Modal({ open, onClose, title, children, footer }: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previouslyFocused = useRef<HTMLElement | null>(null)
+  const titleId = useId()
+
+  // ESC ile kapatma + Tab odak tuzağı.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE)
+      if (!nodes || nodes.length === 0) return
+      const first = nodes[0]
+      const last = nodes[nodes.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === first || active === dialogRef.current)) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  // Açılışta odağı içeri al + kapanışta geri ver; açıkken body kaydırmasını kilitle.
+  useEffect(() => {
+    if (!open) return
+    previouslyFocused.current = document.activeElement as HTMLElement | null
+    const dialog = dialogRef.current
+    const firstFocusable = dialog?.querySelector<HTMLElement>(FOCUSABLE)
+    ;(firstFocusable ?? dialog)?.focus()
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = prevOverflow
+      previouslyFocused.current?.focus()
+    }
+  }, [open])
 
   if (!open) return null
 
@@ -27,12 +72,17 @@ export default function Modal({ open, onClose, title, children, footer }: ModalP
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} aria-hidden />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl dark:bg-slate-900"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl outline-none dark:bg-slate-900"
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-slate-700">
-          <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+          <h2 id={titleId} className="text-base font-semibold text-slate-900 dark:text-slate-100">
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}

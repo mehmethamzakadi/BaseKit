@@ -1,29 +1,24 @@
-import type { TokenResponse } from '@/types/auth'
-
 /**
- * Token saklama. Access + refresh token'ları localStorage'da tutar.
+ * Access token saklama — yalnızca **bellekte** (JS değişkeni) tutulur.
  *
- * Güvenlik notu: localStorage XSS'e açıktır. Üretim sertleştirmesi için ideal
- * olan refresh token'ı httpOnly cookie'de tutmaktır; ancak mevcut backend
- * refresh token'ı yanıt gövdesinde döndürdüğü için client tarafında saklanması
- * gerekiyor. Tek nokta burası olduğundan ileride cookie'ye taşımak kolaydır.
+ * Güvenlik: Kısa ömürlü access token localStorage yerine bellekte tutulur;
+ * böylece kalıcı bir XSS hedefi oluşmaz ve sekme kapanınca kaybolur. Kalıcı
+ * oturum, httpOnly cookie'deki refresh token ile sağlanır: uygulama açılışında
+ * `/auth/refresh` çağrısı cookie'den yeni bir access token üretir
+ * (bkz. AuthProvider ve apiClient).
  */
-const ACCESS_KEY = 'basekit.accessToken'
-const REFRESH_KEY = 'basekit.refreshToken'
+let accessToken: string | null = null
 
 export const tokenStorage = {
-  getAccessToken: (): string | null => localStorage.getItem(ACCESS_KEY),
-  getRefreshToken: (): string | null => localStorage.getItem(REFRESH_KEY),
+  getAccessToken: (): string | null => accessToken,
 
-  setTokens: (tokens: TokenResponse): void => {
-    localStorage.setItem(ACCESS_KEY, tokens.accessToken)
-    localStorage.setItem(REFRESH_KEY, tokens.refreshToken)
+  setAccessToken: (token: string): void => {
+    accessToken = token
   },
 
   clear: (): void => {
-    localStorage.removeItem(ACCESS_KEY)
-    localStorage.removeItem(REFRESH_KEY)
+    accessToken = null
   },
 
-  hasTokens: (): boolean => localStorage.getItem(ACCESS_KEY) !== null,
+  hasToken: (): boolean => accessToken !== null,
 }

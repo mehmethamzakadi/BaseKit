@@ -6,6 +6,7 @@
     <ProjectReference Include="..\Modules\BaseKit.Modules.Users\BaseKit.Modules.Users.csproj" />
     <ProjectReference Include="..\Modules\BaseKit.Modules.Catalog\BaseKit.Modules.Catalog.csproj" />
     <ProjectReference Include="..\Modules\BaseKit.Modules.Notifications\BaseKit.Modules.Notifications.csproj" />
+    <ProjectReference Include="..\Modules\BaseKit.Modules.Insights\BaseKit.Modules.Insights.csproj" />
   </ItemGroup>
 
   <ItemGroup>

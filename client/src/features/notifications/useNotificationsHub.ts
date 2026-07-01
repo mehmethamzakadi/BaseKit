@@ -18,7 +18,7 @@ export function useNotificationsHub() {
   const connectionRef = useRef<signalR.HubConnection | null>(null)
 
   useEffect(() => {
-    if (!tokenStorage.hasTokens()) return
+    if (!tokenStorage.hasToken()) return
 
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(`${env.apiUrl}/hubs/notifications`, {

@@ -7,17 +7,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BaseKit.Modules.Users.Endpoints;
 
-public sealed record RefreshRequest(string RefreshToken);
-
 /// <summary>
-/// Refresh token rotasyonu: gelen token doğrulanır, iptal edilir ve yerine
-/// yeni bir access + refresh çifti üretilir.
+/// Refresh token rotasyonu: refresh token <b>httpOnly cookie'den</b> okunur,
+/// doğrulanır, iptal edilir ve yerine yeni bir access + refresh çifti üretilir.
+/// Yeni refresh token yine cookie olarak yazılır; gövdede yalnızca access token döner.
 /// </summary>
 public sealed class RefreshEndpoint(
     UserManager<AppUser> userManager,
     ITokenService tokenService,
     UsersDbContext db)
-    : Endpoint<RefreshRequest, TokenResponse>
+    : EndpointWithoutRequest<TokenResponse>
 {
     public override void Configure()
     {
@@ -26,13 +25,22 @@ public sealed class RefreshEndpoint(
         Options(x => x.RequireRateLimiting("auth"));
     }
 
-    public override async Task HandleAsync(RefreshRequest req, CancellationToken ct)
+    public override async Task HandleAsync(CancellationToken ct)
     {
-        var hash = tokenService.Hash(req.RefreshToken);
+        var rawToken = HttpContext.ReadRefreshTokenCookie();
+        if (rawToken is null)
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
+        var hash = tokenService.Hash(rawToken);
         var existing = await db.RefreshTokens.FirstOrDefaultAsync(x => x.TokenHash == hash, ct);
 
         if (existing is null || !existing.IsActive)
         {
+            // Geçersiz/iptal edilmiş token → bayat cookie'yi temizle.
+            HttpContext.ClearRefreshTokenCookie();
             await Send.UnauthorizedAsync(ct);
             return;
         }
@@ -40,6 +48,7 @@ public sealed class RefreshEndpoint(
         var user = await userManager.FindByIdAsync(existing.UserId.ToString());
         if (user is null)
         {
+            HttpContext.ClearRefreshTokenCookie();
             await Send.UnauthorizedAsync(ct);
             return;
         }
@@ -61,8 +70,8 @@ public sealed class RefreshEndpoint(
         });
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(
-            new TokenResponse(access.Value, access.ExpiresAtUtc, refresh.RawValue, refresh.ExpiresAtUtc),
-            ct);
+        HttpContext.SetRefreshTokenCookie(refresh.RawValue, refresh.ExpiresAtUtc);
+
+        await Send.OkAsync(new TokenResponse(access.Value, access.ExpiresAtUtc), ct);
     }
 }

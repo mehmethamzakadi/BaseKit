@@ -16,6 +16,12 @@ export const authApi = {
   login: (body: LoginRequest) =>
     apiClient.post<TokenResponse>('/auth/login', body).then((r) => r.data),
 
+  /** httpOnly refresh cookie ile yeni access token alır (açılışta oturum geri yükleme). */
+  refresh: () => apiClient.post<TokenResponse>('/auth/refresh').then((r) => r.data),
+
+  /** Sunucuda refresh token'ı iptal eder ve cookie'yi temizler. */
+  logout: () => apiClient.post<void>('/auth/logout').then((r) => r.data),
+
   register: (body: RegisterRequest) =>
     apiClient.post<RegisterResponse>('/auth/register', body).then((r) => r.data),
 

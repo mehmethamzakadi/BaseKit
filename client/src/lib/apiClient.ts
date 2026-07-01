@@ -5,9 +5,11 @@ import type { TokenResponse } from '@/types/auth'
 
 /** Tüm API çağrıları için ortak axios örneği.
  * Content-Type'ı sabitlemiyoruz: axios JSON gövdeler için application/json,
- * FormData (dosya yükleme) için multipart/form-data + boundary'i otomatik ayarlar. */
+ * FormData (dosya yükleme) için multipart/form-data + boundary'i otomatik ayarlar.
+ * withCredentials: httpOnly refresh cookie'sinin gönderilip alınabilmesi için gerekli. */
 export const apiClient = axios.create({
   baseURL: env.apiUrl,
+  withCredentials: true,
 })
 
 // --- İstek interceptor'ı: access token'ı ekle ---
@@ -30,17 +32,15 @@ export function setOnUnauthorized(callback: (() => void) | null): void {
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = tokenStorage.getRefreshToken()
-  if (!refreshToken) return null
-
   try {
-    // Interceptor döngüsünü önlemek için çıplak axios kullanılır.
+    // Refresh token httpOnly cookie'de taşınır → gövde yok, withCredentials ile
+    // cookie gönderilir. Interceptor döngüsünü önlemek için çıplak axios kullanılır.
     const { data } = await axios.post<TokenResponse>(
       `${env.apiUrl}/auth/refresh`,
-      { refreshToken },
-      { headers: { 'Content-Type': 'application/json' } },
+      null,
+      { withCredentials: true },
     )
-    tokenStorage.setTokens(data)
+    tokenStorage.setAccessToken(data.accessToken)
     return data.accessToken
   } catch {
     tokenStorage.clear()
@@ -57,12 +57,16 @@ apiClient.interceptors.response.use(
       | undefined
 
     const status = error.response?.status
+    // Refresh cookie httpOnly olduğundan client'tan okunamaz; 401'de doğrudan
+    // yenileme denenir (cookie yoksa /auth/refresh 401 döner → oturum düşer).
+    const isAuthCall =
+      original?.url?.endsWith('/auth/refresh') === true ||
+      original?.url?.endsWith('/auth/login') === true
     const shouldRefresh =
       status === 401 &&
       original != null &&
       original._retry !== true &&
-      tokenStorage.getRefreshToken() !== null &&
-      original.url?.endsWith('/auth/refresh') !== true
+      !isAuthCall
 
     if (shouldRefresh && original) {
       original._retry = true

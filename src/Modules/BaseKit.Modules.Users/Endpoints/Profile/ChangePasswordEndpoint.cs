@@ -74,8 +74,9 @@ public sealed class ChangePasswordEndpoint(
 
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(
-            new TokenResponse(access.Value, access.ExpiresAtUtc, refresh.RawValue, refresh.ExpiresAtUtc),
-            ct);
+        // Yeni refresh token'ı httpOnly cookie olarak yaz (eski oturumlar iptal edildi).
+        HttpContext.SetRefreshTokenCookie(refresh.RawValue, refresh.ExpiresAtUtc);
+
+        await Send.OkAsync(new TokenResponse(access.Value, access.ExpiresAtUtc), ct);
     }
 }

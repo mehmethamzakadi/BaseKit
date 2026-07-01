@@ -1,0 +1,13 @@
+// Dış API anahtarları için yerel şablon.
+// Bu dosyayı "appsettings.Development.local.json" olarak kopyalayıp anahtarları doldurun.
+// Gerçek dosya .gitignore (appsettings.*.local.json) ile hariç tutulur → git'e gönderilmez.
+//   cp appsettings.Development.local.json.example appsettings.Development.local.json
+{
+  "Insights": {
+    "OpenWeather": { "ApiKey": "<openweather-api-key>" },
+    "CoinGecko": { "ApiKey": "<coingecko-demo-api-key>" },
+    "ExchangeRate": { "ApiKey": "<exchangerate-api-key>" },
+    "News": { "ApiKey": "<newsapi-key>" },
+    "Gemini": { "ApiKey": "<gemini-api-key>" }
+  }
+}

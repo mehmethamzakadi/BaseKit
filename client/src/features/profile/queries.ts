@@ -53,9 +53,9 @@ export function useChangePassword() {
   return useMutation({
     mutationFn: (body: ChangePasswordInput) => profileApi.changePassword(body),
     onSuccess: (tokens) => {
-      // Backend diğer oturumları iptal edip yeni token çifti döndürür; bu cihazın
-      // oturumu kesintisiz sürsün diye yeni token'ları sakla.
-      tokenStorage.setTokens(tokens)
+      // Backend diğer oturumları iptal edip yeni token üretir (yeni refresh cookie
+      // olarak yazılır); bu cihazın oturumu kesintisiz sürsün diye access token'ı sakla.
+      tokenStorage.setAccessToken(tokens.accessToken)
       toast.success('Şifreniz güncellendi. Diğer oturumlar sonlandırıldı.')
     },
     onError: (error) => toast.error(getApiErrorMessage(error)),

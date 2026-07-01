@@ -62,8 +62,9 @@ public sealed class LoginEndpoint(
         });
         await db.SaveChangesAsync(ct);
 
-        await Send.OkAsync(
-            new TokenResponse(access.Value, access.ExpiresAtUtc, refresh.RawValue, refresh.ExpiresAtUtc),
-            ct);
+        // Refresh token'ı httpOnly cookie olarak yaz; gövdede yalnızca access token döner.
+        HttpContext.SetRefreshTokenCookie(refresh.RawValue, refresh.ExpiresAtUtc);
+
+        await Send.OkAsync(new TokenResponse(access.Value, access.ExpiresAtUtc), ct);
     }
 }

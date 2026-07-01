@@ -1,9 +1,10 @@
-/** /auth/login ve /auth/refresh yanıtı. */
+/**
+ * /auth/login ve /auth/refresh yanıtı. Yalnızca kısa ömürlü access token döner;
+ * refresh token güvenlik için httpOnly cookie ile taşınır, gövdede yer almaz.
+ */
 export interface TokenResponse {
   accessToken: string
   accessTokenExpiresAtUtc: string
-  refreshToken: string
-  refreshTokenExpiresAtUtc: string
 }
 
 /** /auth/me yanıtı: kimlik + profil + roller + (anlık) yetkiler. */

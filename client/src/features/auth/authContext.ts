@@ -8,8 +8,8 @@ export interface AuthContextValue {
   status: AuthStatus
   /** E-posta + şifre ile giriş yapar, token'ları saklar ve kullanıcıyı yükler. */
   login: (email: string, password: string) => Promise<void>
-  /** Token'ları temizler ve oturumu kapatır. */
-  logout: () => void
+  /** Sunucuda oturumu iptal eder (refresh cookie temizlenir) ve yerel durumu sıfırlar. */
+  logout: () => Promise<void>
   /** /auth/me'yi yeniden çağırarak rol/yetkileri tazeler. */
   refreshMe: () => Promise<void>
   hasPermission: (permission: string) => boolean

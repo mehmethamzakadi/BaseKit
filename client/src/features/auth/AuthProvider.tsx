@@ -22,15 +22,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated')
   }, [])
 
-  // İlk yükleme: token varsa kullanıcıyı getir, yoksa anonim.
+  // İlk yükleme: httpOnly refresh cookie'den access token üretmeyi dene; başarılıysa
+  // oturumu geri yükle, aksi halde anonim. (Access token bellekte olduğundan her
+  // sayfa yenilemesinde oturum bu şekilde tazelenir.)
   useEffect(() => {
     let active = true
     async function init() {
-      if (!tokenStorage.hasTokens()) {
-        setStatus('unauthenticated')
-        return
-      }
       try {
+        const tokens = await authApi.refresh()
+        tokenStorage.setAccessToken(tokens.accessToken)
         const me = await authApi.me()
         if (active) {
           setUser(me)
@@ -55,11 +55,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const tokens = await authApi.login({ email, password })
-      tokenStorage.setTokens(tokens)
+      tokenStorage.setAccessToken(tokens.accessToken)
       await loadMe()
     },
     [loadMe],
   )
+
+  // Çıkış: sunucuda refresh token'ı iptal et + cookie'yi temizle, sonra yerel durumu sıfırla.
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout()
+    } catch {
+      // Ağ hatası olsa bile yerel oturumu düşürmeye devam et.
+    }
+    applyLoggedOut()
+  }, [applyLoggedOut])
 
   const value = useMemo<AuthContextValue>(() => {
     const permissions = new Set(user?.permissions ?? [])
@@ -68,13 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       status,
       login,
-      logout: applyLoggedOut,
+      logout,
       refreshMe: loadMe,
       hasPermission: (permission) => permissions.has(permission),
       hasAnyPermission: (list) => list.some((p) => permissions.has(p)),
       hasRole: (role) => roles.has(role),
     }
-  }, [user, status, login, applyLoggedOut, loadMe])
+  }, [user, status, login, logout, loadMe])
 
   return <AuthContext value={value}>{children}</AuthContext>
 }
