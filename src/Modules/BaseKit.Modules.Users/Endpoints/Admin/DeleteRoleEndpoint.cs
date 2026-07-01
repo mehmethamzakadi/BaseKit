@@ -1,16 +1,26 @@
 using BaseKit.Modules.Users.Authorization;
 using BaseKit.Modules.Users.Domain;
+using BaseKit.Modules.Users.Persistence;
 using BaseKit.Shared.Audit;
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseKit.Modules.Users.Endpoints.Admin;
 
 public sealed record DeleteRoleRequest(Guid Id);
 
-/// <summary>Rolü siler (yetkileri cascade ile temizlenir).</summary>
+/// <summary>
+/// Rolü soft-delete ile siler. Rol satırı korunur (IsDeleted=true) ama izin
+/// atamaları (RolePermissions) ve kullanıcı-rol bağları (UserRoles) kalıcı olarak
+/// temizlenir; böylece soft-silinmiş rolün yetkileri kullanıcılarda etkin kalmaz
+/// (eski cascade davranışının karşılığı).
+/// </summary>
 public sealed class DeleteRoleEndpoint(
-    RoleManager<AppRole> roleManager, IPermissionService permissionService, IAuditLogger audit)
+    RoleManager<AppRole> roleManager,
+    UsersDbContext db,
+    IPermissionService permissionService,
+    IAuditLogger audit)
     : Endpoint<DeleteRoleRequest>
 {
     public override void Configure()
@@ -28,6 +38,11 @@ public sealed class DeleteRoleEndpoint(
             return;
         }
 
+        // Join satırlarını kalıcı temizle (soft-delete cascade tetiklemez).
+        await db.RolePermissions.Where(rp => rp.RoleId == role.Id).ExecuteDeleteAsync(ct);
+        await db.UserRoles.Where(ur => ur.RoleId == role.Id).ExecuteDeleteAsync(ct);
+
+        // Rolü sil → SoftDeleteInterceptor bunu IsDeleted=true'ya çevirir.
         var result = await roleManager.DeleteAsync(role);
         if (!result.Succeeded)
         {

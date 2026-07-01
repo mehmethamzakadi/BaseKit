@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { LogOut, Menu, UserCog } from 'lucide-react'
+import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, UserCog } from 'lucide-react'
 import Avatar from '@/components/ui/Avatar'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import NotificationBell from '@/components/dashboard/NotificationBell'
@@ -8,9 +8,14 @@ import { useAuth } from '@/features/auth/useAuth'
 
 interface TopbarProps {
   onMenuClick: () => void
+  /** Masaüstü kenar çubuğunu daralt/genişlet. */
+  onToggleCollapse: () => void
+  collapsed: boolean
+  /** Komut paletini (⌘K) aç. */
+  onOpenCommand: () => void
 }
 
-export default function Topbar({ onMenuClick }: TopbarProps) {
+export default function Topbar({ onMenuClick, onToggleCollapse, collapsed, onOpenCommand }: TopbarProps) {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -27,7 +32,43 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
         <Menu className="size-5" />
       </button>
 
+      {/* Masaüstü: kenar çubuğu daralt/genişlet */}
+      <button
+        type="button"
+        onClick={onToggleCollapse}
+        className="hidden rounded-md p-2 text-slate-600 hover:bg-slate-100 md:inline-flex dark:text-slate-300 dark:hover:bg-slate-800"
+        aria-label={collapsed ? 'Kenar çubuğunu genişlet' : 'Kenar çubuğunu daralt'}
+        title={collapsed ? 'Kenar çubuğunu genişlet' : 'Kenar çubuğunu daralt'}
+      >
+        {collapsed ? <PanelLeftOpen className="size-5" /> : <PanelLeftClose className="size-5" />}
+      </button>
+
+      {/* Komut paleti tetikleyici — ortada, geniş arama alanı görünümü */}
+      <div className="hidden flex-1 justify-center px-2 sm:flex">
+        <button
+          type="button"
+          onClick={onOpenCommand}
+          className="flex w-full max-w-md items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-400 transition hover:border-brand-300 hover:bg-white hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-brand-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+          aria-label="Ara (komut paleti)"
+        >
+          <Search className="size-4 shrink-0" />
+          <span>Ara...</span>
+          <kbd className="ml-auto rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-400">
+            ⌘K
+          </kbd>
+        </button>
+      </div>
+
       <div className="ml-auto flex items-center gap-1">
+        {/* Mobil arama (yalnızca ikon) */}
+        <button
+          type="button"
+          onClick={onOpenCommand}
+          className="rounded-md p-2 text-slate-600 hover:bg-slate-100 sm:hidden dark:text-slate-300 dark:hover:bg-slate-800"
+          aria-label="Ara"
+        >
+          <Search className="size-5" />
+        </button>
         <NotificationBell />
         <ThemeToggle />
 

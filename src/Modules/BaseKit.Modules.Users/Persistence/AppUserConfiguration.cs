@@ -14,5 +14,13 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     {
         builder.Property(x => x.DisplayName).HasMaxLength(100);
         builder.Property(x => x.AvatarObjectKey).HasMaxLength(512);
+
+        // Identity'nin benzersiz kullanıcı adı indeksini, yalnızca silinmemiş
+        // kayıtları kapsayacak biçimde filtreler. Böylece bir kullanıcı soft-delete
+        // edildikten sonra aynı e-posta/kullanıcı adıyla yeni kayıt açılabilir.
+        builder.HasIndex(x => x.NormalizedUserName)
+            .HasDatabaseName("UserNameIndex")
+            .IsUnique()
+            .HasFilter("\"IsDeleted\" = false");
     }
 }

@@ -1,4 +1,5 @@
 using BaseKit.Modules.Notifications.Domain;
+using BaseKit.Shared.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaseKit.Modules.Notifications.Persistence;
@@ -14,9 +15,16 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
 
     public DbSet<Notification> Notifications => Set<Notification>();
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+        optionsBuilder.AddInterceptors(SoftDeleteInterceptor.Instance);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationsDbContext).Assembly);
+        modelBuilder.ApplySoftDeleteQueryFilters();
     }
 }

@@ -22,7 +22,11 @@ public sealed class DeleteNotificationEndpoint(NotificationsDbContext db)
 
         var deleted = await db.Notifications
             .Where(n => n.Id == req.Id && n.UserId == userId.Value)
-            .ExecuteDeleteAsync(ct);
+            .ExecuteUpdateAsync(
+                s => s
+                    .SetProperty(n => n.IsDeleted, true)
+                    .SetProperty(n => n.DeletedAtUtc, DateTimeOffset.UtcNow),
+                ct);
 
         if (deleted == 0) { await Send.NotFoundAsync(ct); return; }
         await Send.NoContentAsync(ct);

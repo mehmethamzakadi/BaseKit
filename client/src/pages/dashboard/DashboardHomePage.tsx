@@ -12,6 +12,8 @@ import {
 import { useAuth } from '@/features/auth/useAuth'
 import { useStats } from '@/features/dashboard/queries'
 import { useGeolocation } from '@/lib/useGeolocation'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
+import { usePublicSettings } from '@/features/settings/usePublicSettings'
 import { navGroups } from '@/config/navigation'
 import AiBriefingWidget from '@/components/dashboard/insights/AiBriefingWidget'
 import WeatherWidget from '@/components/dashboard/insights/WeatherWidget'
@@ -50,6 +52,8 @@ function InfoCard({
 
 export default function DashboardHomePage() {
   const { user, hasPermission } = useAuth()
+  const { siteName } = usePublicSettings()
+  useDocumentTitle('Kontrol Paneli', siteName)
   const canSeeStats = hasPermission('admin.view')
   const { data: stats } = useStats(canSeeStats)
   const { coords } = useGeolocation()

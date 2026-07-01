@@ -55,6 +55,25 @@ export function useDeleteProduct() {
   })
 }
 
+/** Birden çok ürünü topluca siler; tek özet bildirim gösterir. */
+export function useBulkDeleteProducts() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => catalogApi.remove(id)))
+      const failed = results.filter((r) => r.status === 'rejected').length
+      return { total: ids.length, failed }
+    },
+    onSuccess: ({ total, failed }) => {
+      void qc.invalidateQueries({ queryKey: catalogKeys.all })
+      const done = total - failed
+      if (failed === 0) toast.success(`${done} ürün silindi.`)
+      else toast.error(`${done} ürün silindi, ${failed} işlem başarısız.`)
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
 export function useUploadProductImage() {
   const qc = useQueryClient()
   return useMutation({

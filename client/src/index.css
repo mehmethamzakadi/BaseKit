@@ -59,3 +59,15 @@ body {
 .animate-toast-leave {
   animation: toast-leave 0.22s cubic-bezier(0.06, 0.71, 0.55, 1) both;
 }
+
+/* Hareket hassasiyeti: animasyon/geçişleri en aza indir. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

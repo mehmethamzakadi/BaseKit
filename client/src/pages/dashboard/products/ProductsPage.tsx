@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronsUpDown, ImageIcon, Package, Pencil, Plus, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, ImageIcon, Package, Pencil, Plus, Trash2, X } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import Button from '@/components/ui/Button'
 import TableSkeleton from '@/components/ui/TableSkeleton'
@@ -9,7 +9,8 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import SearchInput from '@/components/ui/SearchInput'
 import Pagination from '@/components/ui/Pagination'
 import { PermissionGate } from '@/features/auth/guards'
-import { useProducts, useDeleteProduct } from '@/features/catalog/queries'
+import { useAuth } from '@/features/auth/useAuth'
+import { useProducts, useDeleteProduct, useBulkDeleteProducts } from '@/features/catalog/queries'
 import { useDebouncedValue } from '@/lib/useDebouncedValue'
 import { usePublicSettings } from '@/features/settings/usePublicSettings'
 import { buildPageSizeOptions } from '@/lib/pageSize'
@@ -21,6 +22,8 @@ const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: '
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 
 export default function ProductsPage() {
+  const { hasPermission } = useAuth()
+  const canDelete = hasPermission('catalog.products.delete')
   const { defaultPageSize } = usePublicSettings()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(defaultPageSize)
@@ -48,10 +51,38 @@ export default function ProductsPage() {
     desc,
   })
   const del = useDeleteProduct()
+  const bulkDelete = useBulkDeleteProducts()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editProduct, setEditProduct] = useState<ProductDto | null>(null)
   const [toDelete, setToDelete] = useState<ProductDto | null>(null)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  const products = data?.items ?? []
+  const hasResults = products.length > 0
+
+  // Sayfa/arama/boyut/sıralama değişince seçimi sıfırla.
+  useEffect(() => {
+    setSelected(new Set())
+  }, [page, search, pageSize, sort, desc])
+
+  const selectedIds = useMemo(() => [...selected], [selected])
+  const allSelected = products.length > 0 && products.every((p) => selected.has(p.id))
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  const toggleAll = () =>
+    setSelected((prev) => (prev.size === products.length ? new Set() : new Set(products.map((p) => p.id))))
+
+  const clearSelection = () => setSelected(new Set())
 
   const openCreate = () => {
     setEditProduct(null)
@@ -82,8 +113,15 @@ export default function ProductsPage() {
     }
   }
 
-  const products = data?.items ?? []
-  const hasResults = products.length > 0
+  const confirmBulkDelete = async () => {
+    try {
+      await bulkDelete.mutateAsync(selectedIds)
+      clearSelection()
+      setBulkDeleteOpen(false)
+    } catch {
+      /* hata toast'lanır */
+    }
+  }
 
   return (
     <div>
@@ -108,6 +146,30 @@ export default function ProductsPage() {
         />
       </div>
 
+      {/* Toplu işlem çubuğu */}
+      {canDelete && selected.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 dark:border-brand-500/30 dark:bg-brand-500/10">
+          <span className="text-sm font-medium text-brand-800 dark:text-brand-200">
+            {selected.size} ürün seçildi
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="danger" onClick={() => setBulkDeleteOpen(true)} disabled={bulkDelete.isPending}>
+              <Trash2 className="size-4" />
+              Sil
+            </Button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="rounded-md p-1.5 text-brand-700 transition hover:bg-brand-100 dark:text-brand-300 dark:hover:bg-brand-500/20"
+              aria-label="Seçimi temizle"
+              title="Seçimi temizle"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <TableSkeleton columns={4} />
       ) : isError ? (
@@ -118,24 +180,24 @@ export default function ProductsPage() {
             isPlaceholderData ? 'opacity-60' : ''
           }`}
         >
-          <div className="overflow-x-auto">
+          {/* Masaüstü: tablo */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                 <tr>
-                  <SortableTh
-                    label="Ürün"
-                    field="name"
-                    sort={sort}
-                    desc={desc}
-                    onSort={toggleSort}
-                  />
-                  <SortableTh
-                    label="Fiyat"
-                    field="price"
-                    sort={sort}
-                    desc={desc}
-                    onSort={toggleSort}
-                  />
+                  {canDelete && (
+                    <th className="w-10 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200 dark:border-slate-600"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        aria-label="Tümünü seç"
+                      />
+                    </th>
+                  )}
+                  <SortableTh label="Ürün" field="name" sort={sort} desc={desc} onSort={toggleSort} />
+                  <SortableTh label="Fiyat" field="price" sort={sort} desc={desc} onSort={toggleSort} />
                   <th className="px-4 py-3 font-semibold">Görsel</th>
                   <th className="px-4 py-3 text-right font-semibold">İşlem</th>
                 </tr>
@@ -143,6 +205,17 @@ export default function ProductsPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {products.map((product) => (
                   <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    {canDelete && (
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200 dark:border-slate-600"
+                          checked={selected.has(product.id)}
+                          onChange={() => toggleOne(product.id)}
+                          aria-label={`${product.name} seç`}
+                        />
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <p className="font-medium text-slate-800 dark:text-slate-100">{product.name}</p>
                       {product.description && (
@@ -185,6 +258,59 @@ export default function ProductsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobil: kart listesi */}
+          <ul className="divide-y divide-slate-100 md:hidden dark:divide-slate-800">
+            {products.map((product) => (
+              <li key={product.id} className="flex items-start gap-3 p-4">
+                {canDelete && (
+                  <input
+                    type="checkbox"
+                    className="mt-1 size-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200 dark:border-slate-600"
+                    checked={selected.has(product.id)}
+                    onChange={() => toggleOne(product.id)}
+                    aria-label={`${product.name} seç`}
+                  />
+                )}
+                {product.imageUrl ? (
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    loading="lazy"
+                    className="size-14 shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                  />
+                ) : (
+                  <span className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-200 text-slate-300 dark:border-slate-700 dark:text-slate-600">
+                    <ImageIcon className="size-5" />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-slate-800 dark:text-slate-100">{product.name}</p>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    {currency.format(product.price)}
+                  </p>
+                  {product.description && (
+                    <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                      {product.description}
+                    </p>
+                  )}
+                  <div className="mt-2 flex justify-end gap-2">
+                    <PermissionGate permission="catalog.products.update">
+                      <Button variant="secondary" onClick={() => openEdit(product)} aria-label="Düzenle">
+                        <Pencil className="size-4" />
+                      </Button>
+                    </PermissionGate>
+                    <PermissionGate permission="catalog.products.delete">
+                      <Button variant="danger" onClick={() => setToDelete(product)} aria-label="Sil">
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </PermissionGate>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+
           {data && (
             <Pagination
               page={data.page}
@@ -229,6 +355,16 @@ export default function ProductsPage() {
         loading={del.isPending}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
+      />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        title="Seçili ürünleri sil"
+        message={`Seçili ${selectedIds.length} ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`}
+        confirmText="Hepsini sil"
+        danger
+        loading={bulkDelete.isPending}
+        onConfirm={confirmBulkDelete}
+        onClose={() => setBulkDeleteOpen(false)}
       />
     </div>
   )

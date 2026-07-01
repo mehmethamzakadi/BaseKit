@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { usePublicSettings } from '@/features/settings/usePublicSettings'
+import { useDocumentTitle } from '@/lib/useDocumentTitle'
 
 interface AuthLayoutProps {
   title: string
@@ -12,6 +13,7 @@ interface AuthLayoutProps {
 /** Kimlik doğrulama sayfaları için ortak kart düzeni. */
 export default function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   const { siteName } = usePublicSettings()
+  useDocumentTitle(title, siteName)
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10 dark:bg-slate-950">
       <div className="w-full max-w-md">

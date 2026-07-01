@@ -86,9 +86,48 @@ export function useSetUserActive() {
   return useMutation({
     mutationFn: ({ id, active }: { id: string; active: boolean }) =>
       adminApi.setUserActive(id, active),
-    onSuccess: (_data, { active }) => {
+    // Başarı bildirimi (geri-al düğmesiyle) çağıran sayfada gösterilir.
+    onSuccess: () => {
       void qc.invalidateQueries({ queryKey: adminKeys.users })
-      toast.success(active ? 'Kullanıcı aktifleştirildi.' : 'Kullanıcı pasifleştirildi.')
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
+/** Birden çok kullanıcıyı topluca aktif/pasif yapar; tek özet bildirim gösterir. */
+export function useBulkSetUserActive() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids, active }: { ids: string[]; active: boolean }) => {
+      const results = await Promise.allSettled(ids.map((id) => adminApi.setUserActive(id, active)))
+      const failed = results.filter((r) => r.status === 'rejected').length
+      return { total: ids.length, failed, active }
+    },
+    onSuccess: ({ total, failed, active }) => {
+      void qc.invalidateQueries({ queryKey: adminKeys.users })
+      const done = total - failed
+      const verb = active ? 'aktifleştirildi' : 'pasifleştirildi'
+      if (failed === 0) toast.success(`${done} kullanıcı ${verb}.`)
+      else toast.error(`${done} kullanıcı ${verb}, ${failed} işlem başarısız.`)
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  })
+}
+
+/** Birden çok kullanıcıyı topluca siler; tek özet bildirim gösterir. */
+export function useBulkDeleteUsers() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => adminApi.deleteUser(id)))
+      const failed = results.filter((r) => r.status === 'rejected').length
+      return { total: ids.length, failed }
+    },
+    onSuccess: ({ total, failed }) => {
+      void qc.invalidateQueries({ queryKey: adminKeys.users })
+      const done = total - failed
+      if (failed === 0) toast.success(`${done} kullanıcı silindi.`)
+      else toast.error(`${done} kullanıcı silindi, ${failed} işlem başarısız.`)
     },
     onError: (error) => toast.error(getApiErrorMessage(error)),
   })

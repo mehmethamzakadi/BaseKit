@@ -8,9 +8,11 @@ interface SidebarProps {
   /** Mobil çekmece açık mı? */
   open: boolean
   onClose: () => void
+  /** Masaüstünde yalnızca-ikon (daraltılmış) modu. */
+  collapsed: boolean
 }
 
-export default function Sidebar({ open, onClose }: SidebarProps) {
+export default function Sidebar({ open, onClose, collapsed }: SidebarProps) {
   const { hasPermission } = useAuth()
   const { siteName } = usePublicSettings()
 
@@ -34,12 +36,24 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform duration-200 dark:border-slate-800 dark:bg-slate-900 md:translate-x-0 ${
-          open ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-[transform,width] duration-200 dark:border-slate-800 dark:bg-slate-900 md:translate-x-0 ${
+          collapsed ? 'md:w-16' : 'md:w-64'
+        } ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800">
-          <span className="truncate text-lg font-bold text-brand-700 dark:text-brand-400">{siteName}</span>
+          {/* Daraltılmışsa (masaüstü) yalnızca marka baş harfini göster */}
+          <span
+            className={`truncate text-lg font-bold text-brand-700 dark:text-brand-400 ${
+              collapsed ? 'md:hidden' : ''
+            }`}
+          >
+            {siteName}
+          </span>
+          {collapsed && (
+            <span className="hidden size-8 items-center justify-center rounded-lg bg-brand-50 text-sm font-bold text-brand-700 md:flex dark:bg-brand-500/10 dark:text-brand-400">
+              {siteName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <button
             type="button"
             onClick={onClose}
@@ -54,7 +68,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           {visibleGroups.map((group, index) => (
             <div key={group.label ?? index}>
               {group.label && (
-                <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <p
+                  className={`mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${
+                    collapsed ? 'md:hidden' : ''
+                  }`}
+                >
                   {group.label}
                 </p>
               )}
@@ -65,8 +83,11 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       to={item.to}
                       end={item.end}
                       onClick={onClose}
+                      title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+                          collapsed ? 'md:justify-center md:px-0' : ''
+                        } ${
                           isActive
                             ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
                             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100'
@@ -74,7 +95,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                       }
                     >
                       <item.icon className="size-5 shrink-0" />
-                      {item.label}
+                      <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
                     </NavLink>
                   </li>
                 ))}
