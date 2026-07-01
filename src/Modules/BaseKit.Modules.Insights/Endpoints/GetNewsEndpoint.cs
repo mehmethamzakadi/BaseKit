@@ -15,6 +15,7 @@ public sealed class GetNewsEndpoint(NewsClient news)
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await Send.OkAsync(await news.GetTopHeadlinesAsync(8, ct), ct);
+        // 0 → yapılandırmadaki MaxItems (birden çok kaynaktan birleşik liste).
+        await Send.OkAsync(await news.GetTopHeadlinesAsync(0, ct), ct);
     }
 }

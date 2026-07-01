@@ -7,7 +7,6 @@
     "OpenWeather": { "ApiKey": "<openweather-api-key>" },
     "CoinGecko": { "ApiKey": "<coingecko-demo-api-key>" },
     "ExchangeRate": { "ApiKey": "<exchangerate-api-key>" },
-    "News": { "ApiKey": "<newsapi-key>" },
     "Gemini": { "ApiKey": "<gemini-api-key>" }
   }
 }

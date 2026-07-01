@@ -1,5 +1,6 @@
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
+using System.Net;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using BaseKit.Modules.Insights.Configuration;
 using BaseKit.Modules.Insights.Contracts;
 using BaseKit.Shared.Caching;
@@ -8,57 +9,117 @@ using Microsoft.Extensions.Options;
 
 namespace BaseKit.Modules.Insights.Providers;
 
-/// <summary>News API'den Türkiye manşetlerini çeker (Redis'te ~15 dk cache).</summary>
-public sealed class NewsClient(
+/// <summary>
+/// Birden çok ücretsiz RSS beslemesinden (Türkiye + dünya) haber toplar, yayın
+/// tarihine göre birleştirip sıralar (son dakika önce). Anahtar gerektirmez,
+/// anlık günceldir. Sonuç Redis'te ~10 dk cache'lenir.
+/// </summary>
+public sealed partial class NewsClient(
     HttpClient http,
     IOptions<InsightsOptions> options,
     IDistributedCache cache)
 {
-    private readonly InsightsOptions _opt = options.Value;
-    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(15);
+    private static readonly XNamespace Media = "http://search.yahoo.com/mrss/";
+    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(10);
+    private readonly NewsOptions _opt = options.Value.News;
 
     public async Task<NewsResponse> GetTopHeadlinesAsync(int pageSize, CancellationToken ct)
     {
-        var key = $"insights:news:{_opt.News.Language}:{pageSize}";
-        return await cache.GetOrSetAsync(key, () => FetchAsync(pageSize, ct), Ttl, ct);
+        var take = pageSize > 0 ? pageSize : _opt.MaxItems;
+        return await cache.GetOrSetAsync(
+            $"insights:news:rss:{take}", () => AggregateAsync(take, ct), Ttl, ct);
     }
 
-    private async Task<NewsResponse> FetchAsync(int pageSize, CancellationToken ct)
+    private async Task<NewsResponse> AggregateAsync(int take, CancellationToken ct)
     {
-        // Ücretsiz plan ülke manşeti (top-headlines?country=tr) döndürmediğinden
-        // büyük Türk kaynaklarından en güncel haberler "everything" ile çekilir.
-        var url = $"{_opt.News.BaseUrl}/v2/everything" +
-                  $"?domains={_opt.News.Domains}&language={_opt.News.Language}" +
-                  $"&sortBy=publishedAt&pageSize={pageSize}&apiKey={_opt.News.ApiKey}";
+        // Tüm kaynakları paralel oku; biri hata verirse (SafeFetch) atlanır.
+        var tasks = _opt.Feeds.Select(f => SafeFetchAsync(f, ct));
+        var perFeed = await Task.WhenAll(tasks);
 
-        var dto = await http.GetFromJsonAsync<NewsApiResponse>(url, ct)
-                  ?? throw new InvalidOperationException("Haber yanıtı boş.");
-
-        var articles = (dto.Articles ?? [])
-            .Where(a => !string.IsNullOrWhiteSpace(a.Title) && a.Title != "[Removed]")
-            .Select(a => new NewsArticle(
-                a.Title!,
-                a.Description,
-                a.Url ?? "",
-                a.UrlToImage,
-                a.Source?.Name,
-                a.PublishedAt))
+        // Her kaynaktan yalnızca en yeni MaxPerSource haberi al → tek kaynak listeyi
+        // domine etmesin (çeşitlilik). Sonra hepsini tarihe göre karıştır (son dakika önce).
+        var merged = perFeed
+            .SelectMany(feed => feed
+                .Where(a => !string.IsNullOrWhiteSpace(a.Title) && !string.IsNullOrWhiteSpace(a.Url))
+                .OrderByDescending(a => a.PublishedAt ?? DateTimeOffset.MinValue)
+                .Take(_opt.MaxPerSource))
+            .GroupBy(a => a.Url)                    // aynı haber birden çok kaynakta olabilir
+            .Select(g => g.First())
+            .OrderByDescending(a => a.PublishedAt ?? DateTimeOffset.MinValue)
+            .Take(take)
             .ToList();
 
-        return new NewsResponse(articles);
+        return new NewsResponse(merged);
     }
 
-    private sealed record NewsApiResponse(
-        [property: JsonPropertyName("articles")] IReadOnlyList<NewsApiArticle>? Articles);
+    private async Task<IReadOnlyList<NewsArticle>> SafeFetchAsync(NewsFeed feed, CancellationToken ct)
+    {
+        try
+        {
+            var xml = await http.GetStringAsync(feed.Url, ct);
+            var doc = XDocument.Parse(xml);
+            return doc.Descendants("item").Select(item => Parse(item, feed.Source)).ToList();
+        }
+        catch
+        {
+            return [];
+        }
+    }
 
-    private sealed record NewsApiArticle(
-        [property: JsonPropertyName("title")] string? Title,
-        [property: JsonPropertyName("description")] string? Description,
-        [property: JsonPropertyName("url")] string? Url,
-        [property: JsonPropertyName("urlToImage")] string? UrlToImage,
-        [property: JsonPropertyName("publishedAt")] DateTimeOffset? PublishedAt,
-        [property: JsonPropertyName("source")] NewsApiSource? Source);
+    private static NewsArticle Parse(XElement item, string source)
+    {
+        var title = Clean(item.Element("title")?.Value);
+        var link = item.Element("link")?.Value?.Trim() ?? "";
+        var description = StripHtml(item.Element("description")?.Value);
+        DateTimeOffset? published =
+            DateTimeOffset.TryParse(item.Element("pubDate")?.Value, out var dt) ? dt : null;
 
-    private sealed record NewsApiSource(
-        [property: JsonPropertyName("name")] string? Name);
+        // Bazı kaynaklar (ör. CNN Türk) yerel saati yanlışlıkla GMT olarak etiketler →
+        // tarih geleceğe düşer ("3 saat sonra"). Gelecekteki tarihleri şimdiye sabitle.
+        var now = DateTimeOffset.UtcNow;
+        if (published > now) published = now;
+
+        return new NewsArticle(title, description, link, ExtractImage(item), source, published);
+    }
+
+    /// <summary>Görseli sırayla dener: enclosure → media:content/thumbnail → &lt;image&gt; → açıklamadaki ilk img.</summary>
+    private static string? ExtractImage(XElement item)
+    {
+        var enclosure = item.Elements("enclosure")
+            .FirstOrDefault(e => (e.Attribute("type")?.Value ?? "").StartsWith("image", StringComparison.OrdinalIgnoreCase))
+            ?.Attribute("url")?.Value
+            ?? item.Element("enclosure")?.Attribute("url")?.Value;
+        if (!string.IsNullOrEmpty(enclosure)) return enclosure;
+
+        var media = item.Element(Media + "content")?.Attribute("url")?.Value
+                    ?? item.Element(Media + "thumbnail")?.Attribute("url")?.Value;
+        if (!string.IsNullOrEmpty(media)) return media;
+
+        var image = item.Element("image")?.Value?.Trim();       // AA özel <image> etiketi
+        if (!string.IsNullOrEmpty(image)) return image;
+
+        var raw = item.Element("description")?.Value ?? item.Element("content")?.Value ?? "";
+        var m = ImgSrcRegex().Match(raw);
+        return m.Success ? m.Groups[1].Value : null;
+    }
+
+    /// <summary>HTML etiketlerini temizler, entity'leri çözer, kısaltır.</summary>
+    private static string? StripHtml(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html)) return null;
+        var text = WebUtility.HtmlDecode(TagRegex().Replace(html, " ")).Trim();
+        text = WhitespaceRegex().Replace(text, " ");
+        return text.Length > 300 ? text[..300].TrimEnd() + "…" : text;
+    }
+
+    private static string Clean(string? s) => WebUtility.HtmlDecode(s ?? "").Trim();
+
+    [GeneratedRegex("<img[^>]+src=[\"']([^\"']+)[\"']", RegexOptions.IgnoreCase)]
+    private static partial Regex ImgSrcRegex();
+
+    [GeneratedRegex("<[^>]+>")]
+    private static partial Regex TagRegex();
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex WhitespaceRegex();
 }

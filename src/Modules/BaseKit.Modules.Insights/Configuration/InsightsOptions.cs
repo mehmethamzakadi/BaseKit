@@ -38,18 +38,27 @@ public sealed class ExchangeRateOptions
     public string BaseUrl { get; init; } = "https://v6.exchangerate-api.com";
 }
 
+/// <summary>Tek bir RSS haber kaynağı (URL + gösterilecek kaynak adı).</summary>
+public sealed record NewsFeed(string Url, string Source);
+
+/// <summary>
+/// Haber ayarları. Ücretli/gecikmeli News API yerine ücretsiz, anlık ve çok
+/// kaynaklı <b>RSS</b> beslemeleri kullanılır (anahtar gerekmez). Türkiye + dünya
+/// kaynakları karışık gelir; sonuç yayın tarihine göre sıralanır.
+/// </summary>
 public sealed class NewsOptions
 {
-    public string ApiKey { get; init; } = string.Empty;
-    public string BaseUrl { get; init; } = "https://newsapi.org";
-    /// <summary>Haber dili (ISO 639-1). Türkçe için "tr".</summary>
-    public string Language { get; init; } = "tr";
-    /// <summary>
-    /// Manşetlerin çekileceği kaynak siteler. News API ücretsiz planı ülke bazlı
-    /// (country=tr) manşet döndürmediğinden büyük Türk haber siteleri kullanılır.
-    /// </summary>
-    public string Domains { get; init; } =
-        "hurriyet.com.tr,ntv.com.tr,sozcu.com.tr,cnnturk.com,haberturk.com,trthaber.com,milliyet.com.tr";
+    /// <summary>Toplam gösterilecek haber sayısı (kaynaklar birleştirilip sıralandıktan sonra).</summary>
+    public int MaxItems { get; init; } = 12;
+
+    /// <summary>Tek bir kaynağın listeyi domine etmemesi için kaynak başına en fazla haber.</summary>
+    public int MaxPerSource { get; init; } = 12;
+
+    /// <summary>Okunacak RSS kaynakları. appsettings ile geçersiz kılınabilir.</summary>
+    public IReadOnlyList<NewsFeed> Feeds { get; init; } =
+    [
+        new("https://feeds.bbci.co.uk/turkce/rss.xml", "BBC Türkçe"),
+    ];
 }
 
 public sealed class GeminiOptions
