@@ -1,18 +1,11 @@
 import { useEffect, useRef } from 'react'
 import * as signalR from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import { env } from '@/config/env'
 import { tokenStorage } from '@/features/auth/tokenStorage'
 import { notificationKeys } from './queries'
-import type { AppNotification, NotificationType } from '@/types/notifications'
-
-const TOAST_ICON: Record<NotificationType, string> = {
-  info: '🔔',
-  success: '✅',
-  warning: '⚠️',
-  error: '⛔',
-}
+import { showNotificationToast } from './notificationToast'
+import type { AppNotification } from '@/types/notifications'
 
 /**
  * Bildirimler için SignalR bağlantısını yönetir. Oturum açık alanda (dashboard)
@@ -36,7 +29,7 @@ export function useNotificationsHub() {
 
     connection.on('ReceiveNotification', (n: AppNotification) => {
       void qc.invalidateQueries({ queryKey: notificationKeys.all })
-      toast(n.title, { icon: TOAST_ICON[n.type] ?? '🔔' })
+      showNotificationToast(n)
     })
 
     connectionRef.current = connection
