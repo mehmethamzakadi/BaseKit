@@ -40,6 +40,8 @@ export interface News {
 export interface Briefing {
   text: string
   generatedAtUtc: string
+  /** "ai" = Gemini üretti, "fallback" = kota/hata nedeniyle veriden üretilen özet. */
+  source: 'ai' | 'fallback'
 }
 
 export interface Coords {

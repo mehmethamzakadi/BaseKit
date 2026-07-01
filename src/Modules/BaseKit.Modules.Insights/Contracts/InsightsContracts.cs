@@ -35,5 +35,6 @@ public sealed record NewsArticle(
 /// <summary>Manşet listesi.</summary>
 public sealed record NewsResponse(IReadOnlyList<NewsArticle> Articles);
 
-/// <summary>Yapay zeka günlük brifing metni.</summary>
-public sealed record BriefingResponse(string Text, DateTimeOffset GeneratedAtUtc);
+/// <summary>Günlük brifing metni. <paramref name="Source"/> metnin kaynağını belirtir:
+/// "ai" (Gemini üretti) veya "fallback" (kota/hata nedeniyle veriden üretilen özet).</summary>
+public sealed record BriefingResponse(string Text, DateTimeOffset GeneratedAtUtc, string Source);

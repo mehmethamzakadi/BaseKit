@@ -54,14 +54,14 @@ public sealed class BriefingService(
             try
             {
                 var text = await gemini.GenerateAsync(BuildPrompt(w, m, n), ct);
-                var resp = new BriefingResponse(text, DateTimeOffset.UtcNow);
+                var resp = new BriefingResponse(text, DateTimeOffset.UtcNow, "ai");
                 await WriteCacheAsync(key, resp, AiTtl, ct);
                 return resp;
             }
             catch
             {
                 // Gemini kullanılamıyor (kota/429/ağ) → veriden düz özet üret, kısa cache'le.
-                var resp = new BriefingResponse(BuildFallback(w, m, n), DateTimeOffset.UtcNow);
+                var resp = new BriefingResponse(BuildFallback(w, m, n), DateTimeOffset.UtcNow, "fallback");
                 await WriteCacheAsync(key, resp, FallbackTtl, ct);
                 return resp;
             }
